@@ -1,0 +1,24 @@
+{
+    "name": "RadiantOrchard.Dev",
+    "rootNamespace": "RadiantOrchard.Dev",
+    "references": [
+        "RadiantOrchard.Core",
+        "RadiantOrchard.Gameplay",
+        "RadiantOrchard.Input",
+        "RadiantOrchard.Presentation",
+        "RadiantOrchard.UI",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "DEVELOPMENT_BUILD || UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

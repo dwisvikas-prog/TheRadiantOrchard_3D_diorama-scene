@@ -1,0 +1,23 @@
+{
+    "name": "RadiantOrchard.Editor",
+    "rootNamespace": "RadiantOrchard.Editor",
+    "references": [
+        "RadiantOrchard.Core",
+        "RadiantOrchard.Gameplay",
+        "RadiantOrchard.Input",
+        "RadiantOrchard.Presentation",
+        "RadiantOrchard.UI",
+        "RadiantOrchard.Dev"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,26 @@
+{
+    "name": "RadiantOrchard.Tests.PlayMode",
+    "rootNamespace": "RadiantOrchard.Tests.PlayMode",
+    "references": [
+        "RadiantOrchard.Core",
+        "RadiantOrchard.Gameplay",
+        "RadiantOrchard.Input",
+        "RadiantOrchard.Presentation",
+        "RadiantOrchard.UI",
+        "RadiantOrchard.Dev",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
