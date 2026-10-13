@@ -1,3 +1,6 @@
+# Normalise line endings for every text file (asmdef, json, inputactions, shaders...)
+* text=auto
+
 # Unity YAML: text files, merged with Unity's tool when conflicts happen
 *.unity     text merge=unityyamlmerge eol=lf
 *.prefab    text merge=unityyamlmerge eol=lf
@@ -13,6 +16,9 @@
 *.jpg  filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.psd  filter=lfs diff=lfs merge=lfs -text
+*.psb  filter=lfs diff=lfs merge=lfs -text
+*.ase  filter=lfs diff=lfs merge=lfs -text
+*.aseprite filter=lfs diff=lfs merge=lfs -text
 *.tga  filter=lfs diff=lfs merge=lfs -text
 *.tif  filter=lfs diff=lfs merge=lfs -text
 *.exr  filter=lfs diff=lfs merge=lfs -text
