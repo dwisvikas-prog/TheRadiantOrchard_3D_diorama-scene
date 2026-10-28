@@ -11,10 +11,12 @@ namespace RadiantOrchard.Core
     public sealed class GameConfig : ScriptableObject
     {
         [SerializeField] private BalanceConfig _balance;
+        [SerializeField] private StringTable _strings;
         [Tooltip("All fruits, in the order the plant menu shows them.")]
         [SerializeField] private FruitDefinition[] _fruits = new FruitDefinition[0];
 
         public BalanceConfig Balance => _balance;
+        public StringTable Strings => _strings;
         public IReadOnlyList<FruitDefinition> Fruits => _fruits;
 
         /// <summary>Fruit with the given save-file id, or null if none.</summary>
@@ -30,6 +32,8 @@ namespace RadiantOrchard.Core
         {
             if (_balance == null)
                 Debug.LogError($"{name}: Balance is not assigned.", this);
+            if (_strings == null)
+                Debug.LogError($"{name}: Strings is not assigned.", this);
 
             var seen = new HashSet<string>();
             for (int i = 0; i < _fruits.Length; i++)

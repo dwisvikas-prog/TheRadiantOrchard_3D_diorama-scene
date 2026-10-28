@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06f8624b5afe3c946b364614774cf6ec, type: 3}
+  m_Name: StringTable
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.StringTable
+  _entries:
+  - _key: game.name
+    _text: The Radiant Orchard
+  - _key: tree.wisdom.name
+    _text: Wisdom Tree
+  - _key: well.title
+    _text: Leave a prayer
+  - _key: bloom.verse.reference
+    _text: "Galatians 5:22\u201323"
+  - _key: bloom.verse.text
+    _text: '[Placeholder] Verse text from the client''s chosen Bible translation.'
+  - _key: fruit.strawberry
+    _text: Strawberry
+  - _key: fruit.pineapple
+    _text: Pineapple
+  - _key: fruit.watermelon
+    _text: Watermelon
+  - _key: fruit.lemon
+    _text: Lemon
+  - _key: fruit.grapes
+    _text: Grapes
+  - _key: fruit.apple
+    _text: Apple
+  - _key: fruit.peach
+    _text: Peach
+  - _key: fruit.banana
+    _text: Banana
+  - _key: fruit.cherry
+    _text: Cherry
+  - _key: virtue.love
+    _text: Love
+  - _key: virtue.joy
+    _text: Joy
+  - _key: virtue.peace
+    _text: Peace
+  - _key: virtue.patience
+    _text: Patience
+  - _key: virtue.meekness
+    _text: Meekness
+  - _key: virtue.self_control
+    _text: Self-Control
+  - _key: virtue.kindness
+    _text: Kindness
+  - _key: virtue.goodness
+    _text: Goodness
+  - _key: virtue.faithfulness
+    _text: Faithfulness
+  - _key: situation.love.1
+    _text: '[Placeholder] Love situation line 1'
+  - _key: situation.love.2
+    _text: '[Placeholder] Love situation line 2'
+  - _key: situation.love.3
+    _text: '[Placeholder] Love situation line 3'
+  - _key: quiz.love.scenario
+    _text: '[Placeholder] Love quiz scenario'
+  - _key: situation.joy.1
+    _text: '[Placeholder] Joy situation line 1'
+  - _key: situation.joy.2
+    _text: '[Placeholder] Joy situation line 2'
+  - _key: situation.joy.3
+    _text: '[Placeholder] Joy situation line 3'
+  - _key: quiz.joy.scenario
+    _text: '[Placeholder] Joy quiz scenario'
+  - _key: situation.peace.1
+    _text: "I can't stop worrying\u2026"
+  - _key: situation.peace.2
+    _text: '[Placeholder] Peace situation line 2'
+  - _key: situation.peace.3
+    _text: '[Placeholder] Peace situation line 3'
+  - _key: quiz.peace.scenario
+    _text: Your friend is anxious about an exam tomorrow. What do they need most?
+  - _key: situation.patience.1
+    _text: '[Placeholder] Patience situation line 1'
+  - _key: situation.patience.2
+    _text: '[Placeholder] Patience situation line 2'
+  - _key: situation.patience.3
+    _text: '[Placeholder] Patience situation line 3'
+  - _key: quiz.patience.scenario
+    _text: '[Placeholder] Patience quiz scenario'
+  - _key: situation.meekness.1
+    _text: '[Placeholder] Meekness situation line 1'
+  - _key: situation.meekness.2
+    _text: '[Placeholder] Meekness situation line 2'
+  - _key: situation.meekness.3
+    _text: '[Placeholder] Meekness situation line 3'
+  - _key: quiz.meekness.scenario
+    _text: '[Placeholder] Meekness quiz scenario'
+  - _key: situation.self_control.1
+    _text: '[Placeholder] Self-Control situation line 1'
+  - _key: situation.self_control.2
+    _text: '[Placeholder] Self-Control situation line 2'
+  - _key: situation.self_control.3
+    _text: '[Placeholder] Self-Control situation line 3'
+  - _key: quiz.self_control.scenario
+    _text: '[Placeholder] Self-Control quiz scenario'
+  - _key: situation.kindness.1
+    _text: '[Placeholder] Kindness situation line 1'
+  - _key: situation.kindness.2
+    _text: '[Placeholder] Kindness situation line 2'
+  - _key: situation.kindness.3
+    _text: '[Placeholder] Kindness situation line 3'
+  - _key: quiz.kindness.scenario
+    _text: '[Placeholder] Kindness quiz scenario'
+  - _key: situation.goodness.1
+    _text: '[Placeholder] Goodness situation line 1'
+  - _key: situation.goodness.2
+    _text: '[Placeholder] Goodness situation line 2'
+  - _key: situation.goodness.3
+    _text: '[Placeholder] Goodness situation line 3'
+  - _key: quiz.goodness.scenario
+    _text: '[Placeholder] Goodness quiz scenario'
+  - _key: situation.faithfulness.1
+    _text: '[Placeholder] Faithfulness situation line 1'
+  - _key: situation.faithfulness.2
+    _text: '[Placeholder] Faithfulness situation line 2'
+  - _key: situation.faithfulness.3
+    _text: '[Placeholder] Faithfulness situation line 3'
+  - _key: quiz.faithfulness.scenario
+    _text: '[Placeholder] Faithfulness quiz scenario'
