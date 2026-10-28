@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0384f643d47e6e4cb27cc7ad7d128d6, type: 3}
+  m_Name: Fruit_02_Pineapple
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
+  _id: pineapple
+  _displayNameKey: fruit.pineapple
+  _virtueNameKey: virtue.joy
+  _gesture: 0
+  _growSeconds: 900
+  _plantCost: 50
+  _unlockStage: 0
+  _tint: {r: 0.9490196, g: 0.75686276, b: 0.30588236, a: 1}
+  _icon: {fileID: 0}
+  _saplingSprite: {fileID: 0}
+  _growingSprite: {fileID: 0}
+  _ripeSprite: {fileID: 0}
+  _healVfxPrefab: {fileID: 0}
