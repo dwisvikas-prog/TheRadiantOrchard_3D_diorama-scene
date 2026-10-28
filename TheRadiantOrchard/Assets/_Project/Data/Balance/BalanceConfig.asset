@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff101de02c596664591baa8f2a6e4cfa, type: 3}
+  m_Name: BalanceConfig
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.BalanceConfig
+  _startingSeeds: 0
+  _plotsOpenAtStage: 030000000300000005000000070000000900000009000000
+  _visitorSpawnIntervalSeconds: 30
+  _maxVisitorsOnPath: 3
+  _patienceSeconds: 90
+  _benchSeats: 3
+  _maxOfflineArrivals: 3
+  _basketMaxPerFruit: 3
+  _seedsPerHeal: 10
+  _seedsPerBenchHeal: 5
+  _stageThresholds: 2800000078000000fa000000c2010000bc020000
+  _quizEveryHeals: 25
+  _goldenHarvestSeconds: 60
+  _goldenHarvestSeedMultiplier: 2
+  _bloomFruitRegrowSeconds: 3600
+  _dailyWaveVisitors: 3
+  _dailyWavePatienceSeconds: 120
+  _dailyWaveBonusSeeds: 100
+  _miniEventEveryHeals: 75
+  _goldenFruitChance: 0.05
+  _goldenFruitSeedMultiplier: 3
+  _comboWindowSeconds: 4
+  _wellTextMaxLength: 60
+  _longPressSeconds: 0.55

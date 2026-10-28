@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22ee639f82596ae45a3fe306ee8d2e78, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.GameConfig
+  _balance: {fileID: 11400000, guid: 5dc4ab572aef9f946a4d27abec433fa2, type: 2}
+  _fruits:
+  - {fileID: 11400000, guid: 1bcb6560e5cfbb548b6580541a006318, type: 2}
+  - {fileID: 11400000, guid: 3af4cd80283af2e41be98d228263507f, type: 2}
+  - {fileID: 11400000, guid: 7c2583be8b8e84647a35d14c4b320072, type: 2}
+  - {fileID: 11400000, guid: aafd6bbdf4b41664abeee4013213bde6, type: 2}
+  - {fileID: 11400000, guid: 3efe066d847c94945bfa67f4f62a97d3, type: 2}
+  - {fileID: 11400000, guid: afb2cdb6deaf09b4fb54d70e3a78324f, type: 2}
+  - {fileID: 11400000, guid: 3c6736e5f5a53c5468b18e9b659a7853, type: 2}
+  - {fileID: 11400000, guid: aac5d3d3be96d684eafc133e5f93382a, type: 2}
+  - {fileID: 11400000, guid: ecafd1b912dcbe74580e356961f9c488, type: 2}
