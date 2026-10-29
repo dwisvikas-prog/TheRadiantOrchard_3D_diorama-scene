@@ -114,6 +114,16 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void CameraZoomLimitsAreOrdered()
+        {
+            var b = LoadBalance();
+            Assert.AreEqual(10.8f, b.CameraDefaultOrthoSize, 1e-4f);
+            Assert.LessOrEqual(b.CameraMinOrthoSize, b.CameraDefaultOrthoSize);
+            Assert.LessOrEqual(b.CameraDefaultOrthoSize, b.CameraMaxOrthoSize);
+            Assert.That(b.CameraDragThreshold, Is.GreaterThan(0f).And.LessThan(0.1f));
+        }
+
+        [Test]
         public void TargetFrameRateIs60()
         {
             Assert.AreEqual(60, LoadBalance().TargetFrameRate);

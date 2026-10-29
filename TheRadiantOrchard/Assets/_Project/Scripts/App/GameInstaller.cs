@@ -1,4 +1,5 @@
 using RadiantOrchard.Core;
+using RadiantOrchard.Input;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,6 +12,7 @@ namespace RadiantOrchard.App
     public sealed class GameInstaller : MonoBehaviour
     {
         [SerializeField] private string _bootSceneName = "Boot";
+        [SerializeField] private CameraController _cameraController;
 
         private void Awake()
         {
@@ -21,6 +23,11 @@ namespace RadiantOrchard.App
                 SceneManager.LoadScene(_bootSceneName);
                 return;
             }
+
+            if (_cameraController == null)
+                Log.Error("GameInstaller: Camera Controller is not assigned.", this);
+            else
+                _cameraController.Init(services.Config.Balance);
 
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }

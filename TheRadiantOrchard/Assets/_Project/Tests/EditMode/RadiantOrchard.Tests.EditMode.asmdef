@@ -4,6 +4,7 @@
     "references": [
         "RadiantOrchard.Core",
         "RadiantOrchard.Gameplay",
+        "RadiantOrchard.Input",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

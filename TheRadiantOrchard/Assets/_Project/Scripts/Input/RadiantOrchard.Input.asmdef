@@ -3,7 +3,8 @@
     "rootNamespace": "RadiantOrchard.Input",
     "references": [
         "RadiantOrchard.Core",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

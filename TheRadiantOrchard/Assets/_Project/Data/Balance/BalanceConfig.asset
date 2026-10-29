@@ -36,4 +36,10 @@ MonoBehaviour:
   _comboWindowSeconds: 4
   _wellTextMaxLength: 60
   _longPressSeconds: 0.55
+  _cameraDefaultOrthoSize: 10.8
+  _cameraMinOrthoSize: 5.4
+  _cameraMaxOrthoSize: 13.5
+  _cameraScrollZoomFactor: 0.1
+  _cameraDragThreshold: 0.01
   _autosaveMinIntervalSeconds: 3
+  _targetFrameRate: 60

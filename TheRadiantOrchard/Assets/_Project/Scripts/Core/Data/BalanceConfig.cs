@@ -68,6 +68,18 @@ namespace RadiantOrchard.Core
         [Header("Input (5.5); remaining gesture thresholds are added and tuned on device in W1-19")]
         [Range(0.2f, 1.5f)] [SerializeField] private float _longPressSeconds = 0.55f;
 
+        [Header("Camera (5.1)")]
+        [Tooltip("Orthographic size at the default zoom. Art is drawn at 2x, so 10.8 shows it at half size on a 1080p screen.")]
+        [Min(1f)] [SerializeField] private float _cameraDefaultOrthoSize = 10.8f;
+        [Tooltip("Closest zoom. 5.4 shows the 2x art at full resolution on a 1080p screen.")]
+        [Min(1f)] [SerializeField] private float _cameraMinOrthoSize = 5.4f;
+        [Tooltip("Farthest zoom (also limited by the farm bounds).")]
+        [Min(1f)] [SerializeField] private float _cameraMaxOrthoSize = 13.5f;
+        [Tooltip("Zoom change per mouse-wheel notch (Editor), as a fraction of the current size.")]
+        [Range(0.01f, 0.5f)] [SerializeField] private float _cameraScrollZoomFactor = 0.1f;
+        [Tooltip("How far a finger must move, as a fraction of screen height, before a drag pans the camera. Shorter moves stay taps/gestures.")]
+        [Range(0.001f, 0.1f)] [SerializeField] private float _cameraDragThreshold = 0.01f;
+
         [Header("Saving (ENGINEERING_GUIDE 5.5)")]
         [Tooltip("Minimum real seconds between autosaves while there are unsaved changes. Pause and quit always save.")]
         [Min(0.5f)] [SerializeField] private float _autosaveMinIntervalSeconds = 3f;
@@ -113,6 +125,12 @@ namespace RadiantOrchard.Core
 
         public float LongPressSeconds => _longPressSeconds;
 
+        public float CameraDefaultOrthoSize => _cameraDefaultOrthoSize;
+        public float CameraMinOrthoSize => _cameraMinOrthoSize;
+        public float CameraMaxOrthoSize => _cameraMaxOrthoSize;
+        public float CameraScrollZoomFactor => _cameraScrollZoomFactor;
+        public float CameraDragThreshold => _cameraDragThreshold;
+
         public float AutosaveMinIntervalSeconds => _autosaveMinIntervalSeconds;
 
         public int TargetFrameRate => _targetFrameRate;
@@ -141,6 +159,9 @@ namespace RadiantOrchard.Core
 
             if (_seedsPerBenchHeal > _seedsPerHeal)
                 Debug.LogWarning($"{name}: bench heals pay more than path heals; the spec says half.", this);
+
+            if (!(_cameraMinOrthoSize <= _cameraDefaultOrthoSize && _cameraDefaultOrthoSize <= _cameraMaxOrthoSize))
+                Debug.LogError($"{name}: camera sizes must be Min <= Default <= Max.", this);
         }
     }
 }

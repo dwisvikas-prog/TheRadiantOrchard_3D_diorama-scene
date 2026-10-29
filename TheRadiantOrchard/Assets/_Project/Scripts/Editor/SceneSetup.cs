@@ -1,5 +1,6 @@
 using RadiantOrchard.App;
 using RadiantOrchard.Core;
+using RadiantOrchard.Input;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -8,8 +9,9 @@ using UnityEngine.SceneManagement;
 namespace RadiantOrchard.Editor
 {
     /// <summary>
-    /// Adds the composition-root objects to the two scenes: Bootstrapper (with GameConfig) in Boot, GameInstaller in
-    /// Game. Safe to run again; it only adds what is missing. Run from the menu or with -executeMethod in batch mode.
+    /// Adds the composition-root objects to the two scenes: Bootstrapper (with GameConfig) in Boot; GameInstaller and
+    /// the camera's CameraController in Game, wired together. Safe to run again; it only adds what is missing.
+    /// Run from the menu or with -executeMethod in batch mode.
     /// </summary>
     public static class SceneSetup
     {
@@ -52,12 +54,25 @@ namespace RadiantOrchard.Editor
             EditorSceneManager.SaveScene(boot);
 
             Scene game = EditorSceneManager.OpenScene(GameScenePath, OpenSceneMode.Single);
-            if (FindInRoots<GameInstaller>(game) == null)
-                new GameObject("GameInstaller").AddComponent<GameInstaller>();
+            var installer = FindInRoots<GameInstaller>(game) ?? new GameObject("GameInstaller").AddComponent<GameInstaller>();
+
+            var camera = FindInRoots<Camera>(game);
+            if (camera == null)
+            {
+                Debug.LogError("SceneSetup: the Game scene has no camera.");
+                return;
+            }
+            // Explicit null check: in the Editor a missing component can be a "fake null" that ?? does not catch.
+            var cameraController = camera.GetComponent<CameraController>();
+            if (cameraController == null) cameraController = camera.gameObject.AddComponent<CameraController>();
+            var installerSerialized = new SerializedObject(installer);
+            installerSerialized.FindProperty("_cameraController").objectReferenceValue = cameraController;
+            installerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
 
-            Debug.Log("SceneSetup: Bootstrapper in Boot (GameConfig assigned) and GameInstaller in Game are in place.");
+            Debug.Log("SceneSetup: Bootstrapper in Boot (GameConfig assigned); GameInstaller and CameraController in Game, wired.");
         }
 
         // Editor-only setup code, so searching the scene's root objects is fine here (never at runtime).
