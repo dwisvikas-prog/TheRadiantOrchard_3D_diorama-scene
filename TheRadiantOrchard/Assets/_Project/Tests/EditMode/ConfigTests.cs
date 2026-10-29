@@ -114,6 +114,12 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void AutosaveIntervalIsAFewSeconds()
+        {
+            Assert.That(LoadBalance().AutosaveMinIntervalSeconds, Is.InRange(1f, 10f));
+        }
+
+        [Test]
         public void FirstStageFruitsAreAffordableFromStart()
         {
             // The first plant must be possible with the starting seeds, or a new player is stuck.

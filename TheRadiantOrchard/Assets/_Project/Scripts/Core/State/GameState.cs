@@ -69,6 +69,30 @@ namespace RadiantOrchard.Core
             return state;
         }
 
+        /// <summary>
+        /// Repairs a loaded state so a partly broken or older file never crashes the game: missing lists and settings
+        /// are created, text fields are never null, and missing plots are added (locked).
+        /// </summary>
+        public void EnsureIntegrity(BalanceConfig balance)
+        {
+            if (balance == null) throw new ArgumentNullException(nameof(balance));
+
+            _plots ??= new List<PlotState>();
+            _basket ??= new List<FruitCount>();
+            _bench ??= new List<BenchVisitorState>();
+            _quizSeen ??= new List<string>();
+            _bloomFruitLastHarvestUtc ??= new List<FruitTimestamp>();
+            _settings ??= new SettingsState();
+            _wellText ??= string.Empty;
+            _lastDailyWaveDate ??= string.Empty;
+            _seeds = Math.Max(0, _seeds);
+
+            for (int i = 0; i < _plots.Count; i++)
+                _plots[i] ??= new PlotState();
+            while (_plots.Count < balance.TotalPlots)
+                _plots.Add(new PlotState());
+        }
+
         public int GetBasketCount(string fruitId)
         {
             int i = IndexOf(_basket, fruitId);

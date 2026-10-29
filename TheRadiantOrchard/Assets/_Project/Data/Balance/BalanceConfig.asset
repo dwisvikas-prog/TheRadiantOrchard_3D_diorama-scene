@@ -36,3 +36,4 @@ MonoBehaviour:
   _comboWindowSeconds: 4
   _wellTextMaxLength: 60
   _longPressSeconds: 0.55
+  _autosaveMinIntervalSeconds: 3
