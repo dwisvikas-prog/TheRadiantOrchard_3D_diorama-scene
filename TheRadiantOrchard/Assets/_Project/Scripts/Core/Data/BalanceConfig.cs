@@ -69,6 +69,8 @@ namespace RadiantOrchard.Core
 
         [Header("Input (5.5); remaining gesture thresholds are added and tuned on device in W1-19")]
         [Range(0.2f, 1.5f)] [SerializeField] private float _longPressSeconds = 0.55f;
+        [Tooltip("Longest press (seconds) that still counts as a tap. Must stay below the long press.")]
+        [Range(0.1f, 0.5f)] [SerializeField] private float _tapMaxSeconds = 0.3f;
 
         [Header("Camera (5.1)")]
         [Tooltip("Orthographic size at the default zoom. Art is drawn at 2x, so 10.8 shows it at half size on a 1080p screen.")]
@@ -128,6 +130,7 @@ namespace RadiantOrchard.Core
         public int WellTextMaxLength => _wellTextMaxLength;
 
         public float LongPressSeconds => _longPressSeconds;
+        public float TapMaxSeconds => _tapMaxSeconds;
 
         public float CameraDefaultOrthoSize => _cameraDefaultOrthoSize;
         public float CameraMinOrthoSize => _cameraMinOrthoSize;

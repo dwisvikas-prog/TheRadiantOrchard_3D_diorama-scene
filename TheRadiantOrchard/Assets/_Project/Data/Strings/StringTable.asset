@@ -131,3 +131,15 @@ MonoBehaviour:
     _text: '[Placeholder] Faithfulness situation line 3'
   - _key: quiz.faithfulness.scenario
     _text: '[Placeholder] Faithfulness quiz scenario'
+  - _key: ui.plant.title
+    _text: Plant a tree
+  - _key: ui.plant.seeds
+    _text: 'Seeds: {0}'
+  - _key: ui.plant.free
+    _text: Free
+  - _key: ui.plant.price
+    _text: '{0} seeds'
+  - _key: ui.plant.unlocks_at
+    _text: 'Unlocks at stage {0}'
+  - _key: ui.close
+    _text: Close

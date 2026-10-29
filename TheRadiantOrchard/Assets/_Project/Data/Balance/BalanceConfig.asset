@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.BalanceConfig
   _startingSeeds: 0
   _plotsOpenAtStage: 030000000300000005000000070000000900000009000000
+  _saplingFraction: 0.25
   _visitorSpawnIntervalSeconds: 30
   _maxVisitorsOnPath: 3
   _patienceSeconds: 90
@@ -36,6 +37,7 @@ MonoBehaviour:
   _comboWindowSeconds: 4
   _wellTextMaxLength: 60
   _longPressSeconds: 0.55
+  _tapMaxSeconds: 0.3
   _cameraDefaultOrthoSize: 10.8
   _cameraMinOrthoSize: 5.4
   _cameraMaxOrthoSize: 13.5
@@ -43,3 +45,4 @@ MonoBehaviour:
   _cameraDragThreshold: 0.01
   _autosaveMinIntervalSeconds: 3
   _targetFrameRate: 60
+  _gameTickIntervalSeconds: 0.25

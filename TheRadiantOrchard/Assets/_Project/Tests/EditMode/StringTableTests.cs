@@ -73,6 +73,16 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void PlantMenuKeysExistAndFormat()
+        {
+            var s = Strings();
+            foreach (var key in new[] { "ui.plant.title", "ui.plant.seeds", "ui.plant.free", "ui.plant.price", "ui.plant.unlocks_at", "ui.close" })
+                Assert.IsTrue(s.Contains(key), $"Missing '{key}'.");
+            Assert.AreEqual("50 seeds", string.Format(s.Get("ui.plant.price"), 50));
+            Assert.AreEqual("Unlocks at stage 2", string.Format(s.Get("ui.plant.unlocks_at"), 2));
+        }
+
+        [Test]
         public void MissingKeyIsVisibleAndWarns()
         {
             var table = ScriptableObject.CreateInstance<StringTable>();

@@ -2,6 +2,7 @@ using RadiantOrchard.Core;
 using RadiantOrchard.Gameplay;
 using RadiantOrchard.Input;
 using RadiantOrchard.Presentation;
+using RadiantOrchard.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,10 +17,13 @@ namespace RadiantOrchard.App
         [SerializeField] private string _bootSceneName = "Boot";
         [SerializeField] private FarmView _farmView;
         [SerializeField] private CameraController _cameraController;
+        [SerializeField] private TapDetector _tapDetector;
+        [SerializeField] private PlantMenuView _plantMenu;
 
         private AppServices _services;
         private PlotManager _plots;
         private PlotsPresenter _plotsPresenter;
+        private PlotTapHandler _plotTaps;
 
         private void Awake()
         {
@@ -31,9 +35,9 @@ namespace RadiantOrchard.App
                 return;
             }
 
-            if (_farmView == null || _cameraController == null)
+            if (_farmView == null || _cameraController == null || _tapDetector == null || _plantMenu == null)
             {
-                Log.Error("GameInstaller: Farm View and Camera Controller must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Tap Detector and Plant Menu must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -46,6 +50,10 @@ namespace RadiantOrchard.App
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
 
+            _tapDetector.Init(services.Config.Balance);
+            _plantMenu.Init(_plots, services.Config, services.State, services.Events);
+            _plotTaps = new PlotTapHandler(_tapDetector, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm, _plots, _plantMenu);
+
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }
 
@@ -54,6 +62,7 @@ namespace RadiantOrchard.App
             if (_services == null) return;
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             _plotsPresenter?.Dispose();
+            _plotTaps?.Dispose();
         }
     }
 }

@@ -85,5 +85,18 @@ namespace RadiantOrchard.Tests.EditMode
             for (int i = 0; i < config.Balance.PlotsOpenAt(0); i++)
                 Assert.IsTrue(Inside(farm.ZoneCells[0], farm.PlotRect(i)), $"Starting plot {i + 1} should be in zone 1, which colours first.");
         }
+        [Test]
+        public void PlotIndexAtCellFindsEveryPlotCellAndNothingElse()
+        {
+            var farm = Config().Farm;
+            for (int i = 0; i < farm.PlotCells.Count; i++)
+            {
+                RectInt r = farm.PlotRect(i);
+                Assert.AreEqual(i, farm.PlotIndexAtCell(r.position), $"Plot {i + 1}: first cell.");
+                Assert.AreEqual(i, farm.PlotIndexAtCell(r.max - Vector2Int.one), $"Plot {i + 1}: last cell.");
+            }
+            Assert.AreEqual(-1, farm.PlotIndexAtCell(farm.WellCell), "The well is not a plot.");
+            Assert.AreEqual(-1, farm.PlotIndexAtCell(farm.FarmCells.max + Vector2Int.one), "Outside the farm is not a plot.");
+        }
     }
 }

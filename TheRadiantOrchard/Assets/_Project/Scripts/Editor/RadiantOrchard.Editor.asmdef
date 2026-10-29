@@ -8,7 +8,10 @@
         "RadiantOrchard.Presentation",
         "RadiantOrchard.UI",
         "RadiantOrchard.App",
-        "RadiantOrchard.Dev"
+        "RadiantOrchard.Dev",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [
         "Editor"

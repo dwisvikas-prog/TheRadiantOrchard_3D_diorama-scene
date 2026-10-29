@@ -114,6 +114,13 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void TapIsShorterThanLongPress()
+        {
+            var b = LoadBalance();
+            Assert.That(b.TapMaxSeconds, Is.GreaterThan(0f).And.LessThan(b.LongPressSeconds));
+        }
+
+        [Test]
         public void CameraZoomLimitsAreOrdered()
         {
             var b = LoadBalance();

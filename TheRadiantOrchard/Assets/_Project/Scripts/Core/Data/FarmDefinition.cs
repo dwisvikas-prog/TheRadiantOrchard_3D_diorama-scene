@@ -63,6 +63,14 @@ namespace RadiantOrchard.Core
         /// <summary>The cells a plot covers.</summary>
         public RectInt PlotRect(int index) => new RectInt(_plotCells[index], _plotSizeCells);
 
+        /// <summary>Which plot covers this cell, or -1 if none (used to turn a tap into a plot).</summary>
+        public int PlotIndexAtCell(Vector2Int cell)
+        {
+            for (int i = 0; i < _plotCells.Length; i++)
+                if (PlotRect(i).Contains(cell)) return i;
+            return -1;
+        }
+
         private void OnValidate()
         {
             if (_zoneCells == null || _zoneCells.Length != BalanceConfig.StageCount)
