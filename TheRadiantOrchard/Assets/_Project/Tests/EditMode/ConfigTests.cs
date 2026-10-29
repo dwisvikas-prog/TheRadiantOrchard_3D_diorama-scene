@@ -114,6 +114,12 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void TargetFrameRateIs60()
+        {
+            Assert.AreEqual(60, LoadBalance().TargetFrameRate);
+        }
+
+        [Test]
         public void AutosaveIntervalIsAFewSeconds()
         {
             Assert.That(LoadBalance().AutosaveMinIntervalSeconds, Is.InRange(1f, 10f));

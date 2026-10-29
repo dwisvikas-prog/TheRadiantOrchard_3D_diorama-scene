@@ -1,0 +1,20 @@
+{
+    "name": "RadiantOrchard.App",
+    "rootNamespace": "RadiantOrchard.App",
+    "references": [
+        "RadiantOrchard.Core",
+        "RadiantOrchard.Gameplay",
+        "RadiantOrchard.Input",
+        "RadiantOrchard.Presentation",
+        "RadiantOrchard.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

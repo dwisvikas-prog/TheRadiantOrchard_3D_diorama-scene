@@ -46,7 +46,7 @@ namespace RadiantOrchard.Core
                 LastLoadSource = SaveLoadSource.Backup;
                 // Write the recovered state back promptly so the main file is good again.
                 _dirty = true;
-                Debug.LogWarning("SaveService: the main save could not be read; progress was restored from the backup.");
+                Log.Warn("SaveService: the main save could not be read; progress was restored from the backup.");
             }
             else
             {
@@ -87,7 +87,7 @@ namespace RadiantOrchard.Core
             catch (Exception e)
             {
                 _dirty = true;
-                Debug.LogError($"SaveService: saving failed: {e.Message}");
+                Log.Error($"SaveService: saving failed: {e.Message}");
                 return false;
             }
         }
@@ -100,7 +100,7 @@ namespace RadiantOrchard.Core
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"SaveService: could not read a save file: {e.Message}");
+                Log.Warn($"SaveService: could not read a save file: {e.Message}");
                 return null;
             }
         }
@@ -116,13 +116,13 @@ namespace RadiantOrchard.Core
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"SaveService: the {label} file is not valid JSON ({e.Message}).");
+                Log.Warn($"SaveService: the {label} file is not valid JSON ({e.Message}).");
                 return false;
             }
 
             if (!SaveMigrator.TryMigrate(state, out string error))
             {
-                Debug.LogWarning($"SaveService: the {label} file was not used: {error}.");
+                Log.Warn($"SaveService: the {label} file was not used: {error}.");
                 state = null;
                 return false;
             }

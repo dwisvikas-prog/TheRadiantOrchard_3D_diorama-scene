@@ -44,7 +44,7 @@ namespace RadiantOrchard.Core
 
             _reportedMissing ??= new HashSet<string>();
             if (_reportedMissing.Add(key ?? string.Empty))
-                Debug.LogWarning($"{name}: missing string key '{key}'.", this);
+                Log.Warn($"{name}: missing string key '{key}'.", this);
             return "#" + key;
         }
 

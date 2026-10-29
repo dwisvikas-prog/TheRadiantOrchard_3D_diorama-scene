@@ -72,6 +72,9 @@ namespace RadiantOrchard.Core
         [Tooltip("Minimum real seconds between autosaves while there are unsaved changes. Pause and quit always save.")]
         [Min(0.5f)] [SerializeField] private float _autosaveMinIntervalSeconds = 3f;
 
+        [Header("Performance (ENGINEERING_GUIDE 2)")]
+        [Range(30, 120)] [SerializeField] private int _targetFrameRate = 60;
+
         public int StartingSeeds => _startingSeeds;
         public IReadOnlyList<int> PlotsOpenAtStage => _plotsOpenAtStage;
         public int TotalPlots => _plotsOpenAtStage[_plotsOpenAtStage.Length - 1];
@@ -111,6 +114,8 @@ namespace RadiantOrchard.Core
         public float LongPressSeconds => _longPressSeconds;
 
         public float AutosaveMinIntervalSeconds => _autosaveMinIntervalSeconds;
+
+        public int TargetFrameRate => _targetFrameRate;
 
         /// <summary>Number of open plots at a vibrancy stage (0 = start, 5 = farm complete).</summary>
         public int PlotsOpenAt(int stage) => _plotsOpenAtStage[Mathf.Clamp(stage, 0, StageCount)];
