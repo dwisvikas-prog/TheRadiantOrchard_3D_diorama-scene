@@ -17,6 +17,8 @@ namespace RadiantOrchard.Core
         [Min(0)] [SerializeField] private int _startingSeeds = 0;
         [Tooltip("Plots open at each vibrancy stage, index 0 = start ... index 5 = stage 5.")]
         [SerializeField] private int[] _plotsOpenAtStage = { 3, 3, 5, 7, 9, 9 };
+        [Tooltip("A newly planted tree shows as a sapling for this fraction of its grow time, then as growing.")]
+        [Range(0.05f, 0.9f)] [SerializeField] private float _saplingFraction = 0.25f;
 
         [Header("Visitors (5.4)")]
         [Min(1f)] [SerializeField] private float _visitorSpawnIntervalSeconds = 30f;
@@ -84,8 +86,10 @@ namespace RadiantOrchard.Core
         [Tooltip("Minimum real seconds between autosaves while there are unsaved changes. Pause and quit always save.")]
         [Min(0.5f)] [SerializeField] private float _autosaveMinIntervalSeconds = 3f;
 
-        [Header("Performance (ENGINEERING_GUIDE 2)")]
+        [Header("Performance (ENGINEERING_GUIDE 2, 6)")]
         [Range(30, 120)] [SerializeField] private int _targetFrameRate = 60;
+        [Tooltip("Seconds between simulation ticks (growth, patience). 0.25 = 4 per second.")]
+        [Range(0.05f, 1f)] [SerializeField] private float _gameTickIntervalSeconds = 0.25f;
 
         public int StartingSeeds => _startingSeeds;
         public IReadOnlyList<int> PlotsOpenAtStage => _plotsOpenAtStage;
@@ -134,6 +138,8 @@ namespace RadiantOrchard.Core
         public float AutosaveMinIntervalSeconds => _autosaveMinIntervalSeconds;
 
         public int TargetFrameRate => _targetFrameRate;
+        public float GameTickIntervalSeconds => _gameTickIntervalSeconds;
+        public float SaplingFraction => _saplingFraction;
 
         /// <summary>Number of open plots at a vibrancy stage (0 = start, 5 = farm complete).</summary>
         public int PlotsOpenAt(int stage) => _plotsOpenAtStage[Mathf.Clamp(stage, 0, StageCount)];

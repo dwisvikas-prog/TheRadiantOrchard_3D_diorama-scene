@@ -83,7 +83,7 @@ namespace RadiantOrchard.Editor
 
             Tilemap[] zones = BuildZones(rootGo.transform, farm, groundTile);
             BuildPath(rootGo.transform, farm, groundTile);
-            Transform[] plots = BuildPlots(rootGo.transform, grid, farm, plotSprite, config.Balance.PlotsOpenAt(0));
+            PlotView[] plots = BuildPlots(rootGo.transform, grid, farm, plotSprite, blockSprite, tileSprite, config.Balance.PlotsOpenAt(0));
 
             Transform landmarks = Child(rootGo.transform, "Landmarks");
             Transform tree = Landmark(landmarks, grid, farm.WisdomTreeCell, "WisdomTree", blockSprite, new Vector2(1.8f, 6f), Hex("#6E8B5A"), "Wisdom Tree");
@@ -162,10 +162,14 @@ namespace RadiantOrchard.Editor
             }
         }
 
-        private static Transform[] BuildPlots(Transform parent, Grid grid, FarmDefinition farm, Sprite plotSprite, int openAtStart)
+        private static PlotView[] BuildPlots(Transform parent, Grid grid, FarmDefinition farm, Sprite plotSprite, Sprite block, Sprite tile, int openAtStart)
         {
             Transform container = Child(parent, "Plots");
-            var plots = new Transform[farm.PlotCells.Count];
+            var plots = new PlotView[farm.PlotCells.Count];
+            // Centre of the plot's cell block, relative to its bottom corner (isometric: x = (w-h)/2 * cellW, y = (w+h)/2 * cellH).
+            Vector2Int size = farm.PlotSizeCells;
+            var centre = new Vector3((size.x - size.y) * 0.5f * CellSize.x * 0.5f, (size.x + size.y) * 0.5f * CellSize.y * 0.5f, 0f);
+
             for (int i = 0; i < plots.Length; i++)
             {
                 var root = new GameObject("Plot_" + (i + 1).ToString("00"));
@@ -175,14 +179,34 @@ namespace RadiantOrchard.Editor
                 // The plot and the tree planted on it sort as one object, by the plot's bottom corner.
                 root.AddComponent<SortingGroup>();
 
-                var soil = new GameObject("Soil");
-                soil.transform.SetParent(root.transform, false);
-                var sr = soil.AddComponent<SpriteRenderer>();
-                sr.sprite = plotSprite;
-                sr.color = i < openAtStart ? Color.white : LockedPlotTint;
-                plots[i] = root.transform;
+                var soil = Renderer(root.transform, "Soil", plotSprite, 0, Vector3.zero);
+                soil.color = i < openAtStart ? Color.white : LockedPlotTint;
+                var tree = Renderer(root.transform, "Tree", block, 1, centre);
+                tree.enabled = false;
+                var fruit = Renderer(root.transform, "Fruit", tile, 2, centre + new Vector3(0f, 2.2f, 0f));
+                fruit.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
+                fruit.enabled = false;
+
+                var view = root.AddComponent<PlotView>();
+                var so = new SerializedObject(view);
+                so.FindProperty("_soil").objectReferenceValue = soil;
+                so.FindProperty("_tree").objectReferenceValue = tree;
+                so.FindProperty("_fruit").objectReferenceValue = fruit;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                plots[i] = view;
             }
             return plots;
+        }
+
+        private static SpriteRenderer Renderer(Transform parent, string name, Sprite sprite, int order, Vector3 localPosition)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPosition;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = order;
+            return sr;
         }
 
         private static Transform Landmark(Transform parent, Grid grid, Vector2Int cell, string name, Sprite block, Vector2 sizeWorld, Color colour, string label)

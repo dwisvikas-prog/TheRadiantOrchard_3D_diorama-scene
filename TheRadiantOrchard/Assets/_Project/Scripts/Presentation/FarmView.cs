@@ -13,7 +13,7 @@ namespace RadiantOrchard.Presentation
     {
         [SerializeField] private Grid _grid;
         [Tooltip("Plot roots in unlock order (same order as FarmDefinition.PlotCells).")]
-        [SerializeField] private Transform[] _plots = new Transform[0];
+        [SerializeField] private PlotView[] _plots = new PlotView[0];
         [SerializeField] private Transform _wisdomTree;
         [SerializeField] private Transform _well;
         [SerializeField] private Transform _bench;
@@ -26,7 +26,7 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Rect _worldBounds;
 
         public Grid Grid => _grid;
-        public IReadOnlyList<Transform> Plots => _plots;
+        public IReadOnlyList<PlotView> Plots => _plots;
         public Transform WisdomTree => _wisdomTree;
         public Transform Well => _well;
         public Transform Bench => _bench;

@@ -49,7 +49,7 @@ namespace RadiantOrchard.App
             GameState state = save.Load(_config.Balance);
             TimeSpan away = time.ElapsedSince(state.LastSaveUtc);
 
-            _services = new AppServices(_config, time, save, new EventBus(), away);
+            _services = new AppServices(_config, time, new GameClock(_config.Balance.GameTickIntervalSeconds), save, new EventBus(), away);
             AppServices.Current = _services;
 
             Log.Info($"Bootstrapper: {save.LastLoadSource} save from {saveDirectory}; away {away}.");
@@ -59,7 +59,9 @@ namespace RadiantOrchard.App
 
         private void Update()
         {
-            _services?.Save.Tick(Time.realtimeSinceStartup);
+            if (_services == null) return;
+            _services.Clock.Advance(Time.unscaledDeltaTime);
+            _services.Save.Tick(Time.realtimeSinceStartup);
         }
 
         private void OnApplicationPause(bool paused)

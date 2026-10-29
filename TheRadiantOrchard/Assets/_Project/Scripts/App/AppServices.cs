@@ -10,10 +10,11 @@ namespace RadiantOrchard.App
     /// </summary>
     public sealed class AppServices
     {
-        public AppServices(GameConfig config, TimeService time, SaveService save, EventBus events, TimeSpan launchTimeAway)
+        public AppServices(GameConfig config, TimeService time, GameClock clock, SaveService save, EventBus events, TimeSpan launchTimeAway)
         {
             Config = config;
             Time = time;
+            Clock = clock;
             Save = save;
             Events = events;
             LaunchTimeAway = launchTimeAway;
@@ -23,6 +24,7 @@ namespace RadiantOrchard.App
 
         public GameConfig Config { get; }
         public TimeService Time { get; }
+        public GameClock Clock { get; }
         public SaveService Save { get; }
         public EventBus Events { get; }
         public GameState State => Save.State;
