@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cb59612a615cf249895b403b7413f00, type: 3}
+  m_Name: FarmDefinition
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FarmDefinition
+  _farmCells:
+    x: -12
+    y: -12
+    width: 24
+    height: 24
+  _cameraMarginWorld: 2
+  _plotSizeCells: {x: 3, y: 3}
+  _plotCells:
+  - {x: -5, y: -1}
+  - {x: -1, y: -1}
+  - {x: 3, y: -1}
+  - {x: -5, y: 3}
+  - {x: -1, y: 3}
+  - {x: 3, y: 3}
+  - {x: -5, y: -5}
+  - {x: -1, y: -5}
+  - {x: 3, y: -5}
+  _wisdomTreeCell: {x: -1, y: 8}
+  _wellCell: {x: 8, y: 1}
+  _benchCell: {x: 6, y: -11}
+  _spawnCell: {x: -14, y: -9}
+  _waitingSpotCells:
+  - {x: -3, y: -9}
+  - {x: 0, y: -9}
+  - {x: 3, y: -9}
+  _exitCell: {x: 13, y: -9}
+  _zoneCells:
+  - x: -6
+    y: -6
+    width: 12
+    height: 12
+  - x: -12
+    y: -12
+    width: 6
+    height: 24
+  - x: 6
+    y: -12
+    width: 6
+    height: 24
+  - x: -6
+    y: 6
+    width: 12
+    height: 6
+  - x: -6
+    y: -12
+    width: 12
+    height: 6

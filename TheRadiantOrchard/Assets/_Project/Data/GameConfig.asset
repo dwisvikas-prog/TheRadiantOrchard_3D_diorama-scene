@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.GameConfig
   _balance: {fileID: 11400000, guid: 5dc4ab572aef9f946a4d27abec433fa2, type: 2}
   _strings: {fileID: 11400000, guid: 0805211049392f64e98868404121ad9e, type: 2}
+  _farm: {fileID: 11400000, guid: d927aed35bf8efc488eecbaacf46d398, type: 2}
   _fruits:
   - {fileID: 11400000, guid: 1bcb6560e5cfbb548b6580541a006318, type: 2}
   - {fileID: 11400000, guid: 3af4cd80283af2e41be98d228263507f, type: 2}
