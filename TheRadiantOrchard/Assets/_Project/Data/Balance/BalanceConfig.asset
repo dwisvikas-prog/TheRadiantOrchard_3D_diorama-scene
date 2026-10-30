@@ -38,6 +38,12 @@ MonoBehaviour:
   _wellTextMaxLength: 60
   _longPressSeconds: 0.55
   _tapMaxSeconds: 0.3
+  _doubleTapWindowSeconds: 0.3
+  _doubleTapMaxDistance: 0.05
+  _swipeMinSpeed: 1.5
+  _swipeMinDistance: 0.08
+  _swipeMaxSeconds: 0.4
+  _swipeSampleSpacing: 0.02
   _cameraDefaultOrthoSize: 10.8
   _cameraMinOrthoSize: 5.4
   _cameraMaxOrthoSize: 13.5

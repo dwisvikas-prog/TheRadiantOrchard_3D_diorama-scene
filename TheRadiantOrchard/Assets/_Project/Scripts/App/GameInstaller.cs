@@ -17,13 +17,13 @@ namespace RadiantOrchard.App
         [SerializeField] private string _bootSceneName = "Boot";
         [SerializeField] private FarmView _farmView;
         [SerializeField] private CameraController _cameraController;
-        [SerializeField] private TapDetector _tapDetector;
+        [SerializeField] private GestureRecognizer _gestures;
         [SerializeField] private PlantMenuView _plantMenu;
 
         private AppServices _services;
         private PlotManager _plots;
         private PlotsPresenter _plotsPresenter;
-        private PlotTapHandler _plotTaps;
+        private FarmPointerHandler _pointer;
 
         private void Awake()
         {
@@ -35,9 +35,9 @@ namespace RadiantOrchard.App
                 return;
             }
 
-            if (_farmView == null || _cameraController == null || _tapDetector == null || _plantMenu == null)
+            if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Tap Detector and Plant Menu must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures and Plant Menu must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -51,12 +51,18 @@ namespace RadiantOrchard.App
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
 
-            _tapDetector.Init(services.Config.Balance);
+            _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
-            _plotTaps = new PlotTapHandler(_tapDetector, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm, _plots, _plantMenu);
+            _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
+                _plots, _plantMenu, services.Config.Balance.SwipeSampleSpacing);
 
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>For dev tools only (Radiant Orchard > Dev menu, later the dev panel).</summary>
+        public PlotManager DevPlots => _plots;
+#endif
 
         private void OnDestroy()
         {
@@ -64,7 +70,7 @@ namespace RadiantOrchard.App
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             _plotsPresenter?.Dispose();
-            _plotTaps?.Dispose();
+            _pointer?.Dispose();
         }
     }
 }

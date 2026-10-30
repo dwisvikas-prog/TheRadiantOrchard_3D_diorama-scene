@@ -15,7 +15,7 @@ namespace RadiantOrchard.Editor
     /// <summary>
     /// Builds the placeholder UI in the Game scene: EventSystem (Input System UI module), the overlay Canvas
     /// (1920x1080 reference, match 0.5) and the plant menu, saved as a prefab so it can be restyled without code.
-    /// Adds the TapDetector to the camera and wires everything into the GameInstaller. Re-running rebuilds the UI.
+    /// Adds the GestureRecognizer to the camera and wires everything into the GameInstaller. Re-running rebuilds the UI.
     /// </summary>
     public static class UiBuilder
     {
@@ -80,17 +80,19 @@ namespace RadiantOrchard.Editor
             var menu = (GameObject)PrefabUtility.InstantiatePrefab(prefab, canvasGo.transform);
             Stretch(menu.GetComponent<RectTransform>());
 
-            var tap = camera.GetComponent<TapDetector>();
-            if (tap == null) tap = camera.gameObject.AddComponent<TapDetector>();
+            // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
+            var gestures = camera.GetComponent<GestureRecognizer>();
+            if (gestures == null) gestures = camera.gameObject.AddComponent<GestureRecognizer>();
 
             var so = new SerializedObject(installer);
-            so.FindProperty("_tapDetector").objectReferenceValue = tap;
+            so.FindProperty("_gestures").objectReferenceValue = gestures;
             so.FindProperty("_plantMenu").objectReferenceValue = menu.GetComponent<PlantMenuView>();
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas and PlantMenu prefab built; TapDetector and PlantMenu wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas and PlantMenu prefab built; GestureRecognizer and PlantMenu wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)

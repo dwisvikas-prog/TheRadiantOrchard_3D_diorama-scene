@@ -1,3 +1,4 @@
+using System.Collections;
 using RadiantOrchard.Core;
 using RadiantOrchard.Gameplay;
 using TMPro;
@@ -24,9 +25,15 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Color _saplingColour = new Color(0.50f, 0.69f, 0.35f, 1f);
         [SerializeField] private Color _growingColour = new Color(0.31f, 0.56f, 0.23f, 1f);
 
+        [Header("Wrong-gesture wobble (CLAUDE.md 5.5)")]
+        [SerializeField] private float _wobbleDegrees = 8f;
+        [SerializeField] private float _wobbleSeconds = 0.4f;
+        [SerializeField] private int _wobbleSwings = 3;
+
         private Sprite _placeholderTree;
         private int _index = -1;
         private PlotManager _plots;
+        private Coroutine _wobble;
 
         public int Index => _index;
 
@@ -69,6 +76,46 @@ namespace RadiantOrchard.Presentation
             _tree.color = sapling ? _saplingColour : _growingColour;
             _fruit.enabled = info.IsRipe;
             _fruit.color = fruit.Tint;
+        }
+
+        /// <summary>
+        /// Whether a world point is on this plot's tree or fruit. Trees stand tall above the soil, and players swipe
+        /// and tap the tree itself, so the tree counts as well as the plot's ground cells.
+        /// </summary>
+        public bool TreeContains(Vector2 world)
+        {
+            return (_tree.enabled && Contains(_tree.bounds, world)) || (_fruit.enabled && Contains(_fruit.bounds, world));
+        }
+
+        /// <summary>Shakes the tree from its base: the wrong-gesture reaction.</summary>
+        public void Wobble()
+        {
+            if (!isActiveAndEnabled || !_tree.enabled) return;
+            if (_wobble != null) StopCoroutine(_wobble);
+            _wobble = StartCoroutine(WobbleRoutine());
+        }
+
+        private IEnumerator WobbleRoutine()
+        {
+            Transform t = _tree.transform;
+            for (float elapsed = 0f; elapsed < _wobbleSeconds; elapsed += Time.deltaTime)
+            {
+                float k = elapsed / _wobbleSeconds;
+                float angle = Mathf.Sin(k * _wobbleSwings * 2f * Mathf.PI) * _wobbleDegrees * (1f - k);
+                t.localRotation = Quaternion.Euler(0f, 0f, angle);
+                yield return null;
+            }
+            t.localRotation = Quaternion.identity;
+            _wobble = null;
+        }
+
+        private static bool Contains(Bounds bounds, Vector2 world) =>
+            world.x >= bounds.min.x && world.x <= bounds.max.x && world.y >= bounds.min.y && world.y <= bounds.max.y;
+
+        private void OnDisable()
+        {
+            _wobble = null;
+            if (_tree != null) _tree.transform.localRotation = Quaternion.identity;
         }
 
         /// <summary>Sets the countdown text; the presenter calls this only when the shown second changes.</summary>

@@ -8,9 +8,9 @@ using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 namespace RadiantOrchard.Input
 {
     /// <summary>
-    /// Drag to pan, pinch to zoom (scroll wheel in the Editor), clamped to the farm bounds and the zoom limits.
-    /// A drag only becomes a pan after it moves past a small threshold, so taps and gestures on trees are not stolen;
-    /// GestureRecognizer reads IsPanning / IsPinching to know when the camera owns the pointer.
+    /// Pans (when GestureRecognizer decides a one-finger drag is a pan) and zooms with a pinch (scroll wheel in the
+    /// Editor), clamped to the farm bounds and the zoom limits. One-finger input is read only by GestureRecognizer,
+    /// so a drag is either a pan or a gesture, never both.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     public sealed class CameraController : MonoBehaviour
@@ -21,16 +21,10 @@ namespace RadiantOrchard.Input
         private Camera _camera;
         private BalanceConfig _balance;
 
-        private bool _pointerDown;
-        private bool _pointerIgnored;
-        private Vector2 _pointerStart;
-        private Vector2 _pointerLast;
         private float _lastPinchDistance;
         private Vector2 _lastPinchMid;
 
-        public bool IsPanning { get; private set; }
         public bool IsPinching { get; private set; }
-        public bool OwnsPointer => IsPanning || IsPinching;
         public Rect Bounds => _bounds;
 
         public void Init(BalanceConfig balance)
@@ -60,7 +54,17 @@ namespace RadiantOrchard.Input
         private void OnDisable()
         {
             EnhancedTouchSupport.Disable();
-            ResetPointer();
+            EndPinch();
+        }
+
+        /// <summary>Moves the view with a finger that moved by screenDelta pixels (the ground follows the finger).</summary>
+        public void PanByScreenDelta(Vector2 screenDelta)
+        {
+            if (_balance == null || screenDelta == Vector2.zero) return;
+            float perPixel = CameraMath.WorldPerPixel(_camera.orthographicSize, Screen.height);
+            Vector3 p = transform.position;
+            transform.position = new Vector3(p.x - screenDelta.x * perPixel, p.y - screenDelta.y * perPixel, p.z);
+            ApplyClamp();
         }
 
         private void Update()
@@ -68,62 +72,24 @@ namespace RadiantOrchard.Input
             if (_balance == null) return;
 
             var touches = Touch.activeTouches;
-            if (touches.Count >= 2) HandlePinch(touches[0].screenPosition, touches[1].screenPosition);
-            else if (touches.Count == 1) HandleDrag(true, touches[0].screenPosition, touches[0].phase == UnityEngine.InputSystem.TouchPhase.Began);
-            else if (Mouse.current != null) HandleMouse(Mouse.current);
-            else ResetPointer();
-        }
-
-        private void HandleMouse(Mouse mouse)
-        {
-            Vector2 position = mouse.position.ReadValue();
-            HandleDrag(mouse.leftButton.isPressed, position, mouse.leftButton.wasPressedThisFrame);
-
-            float scroll = mouse.scroll.ReadValue().y;
-            if (scroll != 0f && !IsPointerOverUi())
-                ZoomTo(_camera.orthographicSize * (1f - Mathf.Sign(scroll) * _balance.CameraScrollZoomFactor), position);
-        }
-
-        private void HandleDrag(bool down, Vector2 position, bool began)
-        {
-            IsPinching = false;
-            _lastPinchDistance = 0f;
-
-            if (!down)
+            if (touches.Count >= 2)
             {
-                ResetPointer();
+                HandlePinch(touches[0].screenPosition, touches[1].screenPosition);
                 return;
             }
+            EndPinch();
 
-            if (began || !_pointerDown)
+            Mouse mouse = Mouse.current;
+            if (touches.Count == 0 && mouse != null)
             {
-                _pointerDown = true;
-                _pointerIgnored = IsPointerOverUi();
-                _pointerStart = position;
-                _pointerLast = position;
-                return;
+                float scroll = mouse.scroll.ReadValue().y;
+                if (scroll != 0f && !IsPointerOverUi())
+                    ZoomTo(_camera.orthographicSize * (1f - Mathf.Sign(scroll) * _balance.CameraScrollZoomFactor), mouse.position.ReadValue());
             }
-
-            if (_pointerIgnored) return;
-
-            if (!IsPanning && (position - _pointerStart).magnitude >= _balance.CameraDragThreshold * Screen.height)
-                IsPanning = true;
-
-            if (IsPanning)
-            {
-                float perPixel = CameraMath.WorldPerPixel(_camera.orthographicSize, Screen.height);
-                Vector2 delta = (position - _pointerLast) * perPixel;
-                Vector3 p = transform.position;
-                transform.position = new Vector3(p.x - delta.x, p.y - delta.y, p.z);
-                ApplyClamp();
-            }
-            _pointerLast = position;
         }
 
         private void HandlePinch(Vector2 a, Vector2 b)
         {
-            IsPanning = false;
-            _pointerDown = false;
             float distance = Vector2.Distance(a, b);
             Vector2 mid = (a + b) * 0.5f;
 
@@ -171,11 +137,8 @@ namespace RadiantOrchard.Input
             transform.position = new Vector3(clamped.x, clamped.y, transform.position.z);
         }
 
-        private void ResetPointer()
+        private void EndPinch()
         {
-            _pointerDown = false;
-            _pointerIgnored = false;
-            IsPanning = false;
             IsPinching = false;
             _lastPinchDistance = 0f;
         }

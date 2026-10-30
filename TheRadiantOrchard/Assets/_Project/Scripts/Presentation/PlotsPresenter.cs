@@ -34,6 +34,7 @@ namespace RadiantOrchard.Presentation
 
             _events.Subscribe<PlotStageChanged>(OnStageChanged);
             _events.Subscribe<PlotUnlocked>(OnUnlocked);
+            _events.Subscribe<HarvestRejected>(OnHarvestRejected);
             RefreshAll();
         }
 
@@ -53,11 +54,17 @@ namespace RadiantOrchard.Presentation
         {
             _events.Unsubscribe<PlotStageChanged>(OnStageChanged);
             _events.Unsubscribe<PlotUnlocked>(OnUnlocked);
+            _events.Unsubscribe<HarvestRejected>(OnHarvestRejected);
         }
 
         private void OnStageChanged(PlotStageChanged e) => Refresh(e.Plot);
 
         private void OnUnlocked(PlotUnlocked e) => Refresh(e.Plot);
+
+        private void OnHarvestRejected(HarvestRejected e)
+        {
+            if (e.Plot >= 0 && e.Plot < _views.Count && _views[e.Plot] != null) _views[e.Plot].Wobble();
+        }
 
         private void Refresh(int index)
         {

@@ -67,10 +67,22 @@ namespace RadiantOrchard.Core
         [Header("Stone Well (5.14)")]
         [Min(1)] [SerializeField] private int _wellTextMaxLength = 60;
 
-        [Header("Input (5.5); remaining gesture thresholds are added and tuned on device in W1-19")]
+        [Header("Input (5.5); tune on device (W1-22). Distances are fractions of screen height.")]
         [Range(0.2f, 1.5f)] [SerializeField] private float _longPressSeconds = 0.55f;
         [Tooltip("Longest press (seconds) that still counts as a tap. Must stay below the long press.")]
         [Range(0.1f, 0.5f)] [SerializeField] private float _tapMaxSeconds = 0.3f;
+        [Tooltip("The second tap of a double tap must start within this many seconds of the first tap ending.")]
+        [Range(0.1f, 0.6f)] [SerializeField] private float _doubleTapWindowSeconds = 0.3f;
+        [Tooltip("The second tap must land within this distance of the first (fraction of screen height).")]
+        [Range(0.01f, 0.2f)] [SerializeField] private float _doubleTapMaxDistance = 0.05f;
+        [Tooltip("A drag moving at least this fast when it passes the camera drag threshold is a swipe, not a pan (screen heights per second).")]
+        [Range(0.3f, 6f)] [SerializeField] private float _swipeMinSpeed = 1.5f;
+        [Tooltip("Shortest swipe, start to end (fraction of screen height).")]
+        [Range(0.02f, 0.5f)] [SerializeField] private float _swipeMinDistance = 0.08f;
+        [Tooltip("Longest swipe. A flick held longer than this becomes a camera pan.")]
+        [Range(0.1f, 1f)] [SerializeField] private float _swipeMaxSeconds = 0.4f;
+        [Tooltip("Gap between the points a swipe is hit-tested at (fraction of screen height). Keep it smaller than the narrowest tree.")]
+        [Range(0.005f, 0.1f)] [SerializeField] private float _swipeSampleSpacing = 0.02f;
 
         [Header("Camera (5.1)")]
         [Tooltip("Orthographic size at the default zoom. Art is drawn at 2x, so 10.8 shows it at half size on a 1080p screen.")]
@@ -131,6 +143,12 @@ namespace RadiantOrchard.Core
 
         public float LongPressSeconds => _longPressSeconds;
         public float TapMaxSeconds => _tapMaxSeconds;
+        public float DoubleTapWindowSeconds => _doubleTapWindowSeconds;
+        public float DoubleTapMaxDistance => _doubleTapMaxDistance;
+        public float SwipeMinSpeed => _swipeMinSpeed;
+        public float SwipeMinDistance => _swipeMinDistance;
+        public float SwipeMaxSeconds => _swipeMaxSeconds;
+        public float SwipeSampleSpacing => _swipeSampleSpacing;
 
         public float CameraDefaultOrthoSize => _cameraDefaultOrthoSize;
         public float CameraMinOrthoSize => _cameraMinOrthoSize;

@@ -121,6 +121,18 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void GestureThresholdsFitTogether()
+        {
+            var b = LoadBalance();
+            Assert.Greater(b.SwipeMinDistance, b.CameraDragThreshold, "A swipe must travel past the point where a drag is decided.");
+            Assert.Greater(b.DoubleTapMaxDistance, b.CameraDragThreshold, "The two taps of a double tap may land further apart than one tap may wobble.");
+            Assert.Less(b.SwipeSampleSpacing, b.SwipeMinDistance);
+            Assert.Greater(b.DoubleTapWindowSeconds, 0f);
+            Assert.Greater(b.SwipeMinSpeed, 0f);
+            Assert.Greater(b.SwipeMaxSeconds, 0f);
+        }
+
+        [Test]
         public void CameraZoomLimitsAreOrdered()
         {
             var b = LoadBalance();

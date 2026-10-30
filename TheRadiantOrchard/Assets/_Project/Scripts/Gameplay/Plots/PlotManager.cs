@@ -94,6 +94,32 @@ namespace RadiantOrchard.Gameplay
             return true;
         }
 
+        /// <summary>
+        /// A harvest gesture on a plot (HarvestRules): the fruit's own gesture picks a ripe tree; another gesture on a
+        /// ripe tree raises HarvestRejected. Anything else is ignored.
+        /// </summary>
+        public HarvestJudgement HandleGesture(int index, GestureType gesture)
+        {
+            if (!IsValid(index)) return HarvestJudgement.Ignore;
+            PlotInfo info = Get(index);
+            return Apply(index, HarvestRules.Judge(info, _config.FindFruit(info.FruitId), gesture));
+        }
+
+        /// <summary>A single tap on a plot that is not empty (HarvestRules.JudgeTap).</summary>
+        public HarvestJudgement HandleTap(int index)
+        {
+            if (!IsValid(index)) return HarvestJudgement.Ignore;
+            PlotInfo info = Get(index);
+            return Apply(index, HarvestRules.JudgeTap(info, _config.FindFruit(info.FruitId)));
+        }
+
+        private HarvestJudgement Apply(int index, HarvestJudgement judgement)
+        {
+            if (judgement == HarvestJudgement.Harvest && !TryHarvest(index, out _)) return HarvestJudgement.Ignore;
+            if (judgement == HarvestJudgement.WrongGesture) _events.Publish(new HarvestRejected(index, _state.Plots[index].FruitId));
+            return judgement;
+        }
+
         /// <summary>Makes a planted tree ripe now (tutorial, Blessing Rain, dev tools). False if nothing is planted.</summary>
         public bool RipenNow(int index)
         {
