@@ -34,6 +34,15 @@ namespace RadiantOrchard.Tests.EditMode
         }
 
         [Test]
+        public void ABenchHealPaysHalfAndStillCounts()
+        {
+            Assert.AreEqual(_config.Balance.SeedsPerBenchHeal, _heal.Heal("strawberry", 7, fromBench: true));
+            Assert.AreEqual(5, _state.Seeds, "CLAUDE.md 5.6: 5 seeds from the bench.");
+            Assert.AreEqual(1, _state.HealedTotal);
+            Assert.AreEqual(5, _healEvents[0].Seeds);
+        }
+
+        [Test]
         public void AHealPaysSeedsAndCountsTowardsEverything()
         {
             int seeds = _heal.Heal("strawberry");

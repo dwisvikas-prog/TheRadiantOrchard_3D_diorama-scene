@@ -28,6 +28,8 @@ namespace RadiantOrchard.Core
         [Min(0.5f)] [SerializeField] private float _visitorWalkInSeconds = 4f;
         [Tooltip("Seconds a healed visitor takes to walk from their spot to the exit; the spot frees after that.")]
         [Min(0.5f)] [SerializeField] private float _visitorWalkOutSeconds = 4f;
+        [Tooltip("Seconds a visitor whose patience ran out takes to walk to their bench seat (from the path or the jungle).")]
+        [Min(0.5f)] [SerializeField] private float _visitorWalkToBenchSeconds = 4f;
         [Min(1)] [SerializeField] private int _benchSeats = 3;
         [Tooltip("Visitors already waiting on the path after time away.")]
         [Min(0)] [SerializeField] private int _maxOfflineArrivals = 3;
@@ -118,6 +120,7 @@ namespace RadiantOrchard.Core
         public float PatienceSeconds => _patienceSeconds;
         public float VisitorWalkInSeconds => _visitorWalkInSeconds;
         public float VisitorWalkOutSeconds => _visitorWalkOutSeconds;
+        public float VisitorWalkToBenchSeconds => _visitorWalkToBenchSeconds;
         public int BenchSeats => _benchSeats;
         public int MaxOfflineArrivals => _maxOfflineArrivals;
 

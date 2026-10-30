@@ -60,7 +60,7 @@ namespace RadiantOrchard.App
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty);
-            _visitors = new VisitorManager(services.State, services.Config, services.Events, _heal, new System.Random());
+            _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
             services.Clock.Ticked += TickVisitors;
             _visitorViews.Init(_visitors, services.Config, services.Events, _farmView);
             _healPresenter = new HealPresenter(_visitorViews, _popups, services.Config, services.Events);

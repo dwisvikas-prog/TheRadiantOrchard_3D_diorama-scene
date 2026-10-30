@@ -99,7 +99,7 @@ namespace RadiantOrchard.Dev
             Place(_fps.rectTransform, new Vector2(1f, 1f), new Vector2(180f, 64f), new Vector2(-260f, -52f));
 
             RectTransform panel = Rect("Panel", safe);
-            Place(panel, new Vector2(1f, 1f), new Vector2(640f, 820f), new Vector2(-340f, -510f));
+            Place(panel, new Vector2(1f, 1f), new Vector2(640f, 900f), new Vector2(-340f, -550f));
             panel.gameObject.AddComponent<Image>().color = PanelColour;
             var column = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             column.padding = new RectOffset(20, 20, 20, 20);
@@ -121,6 +121,7 @@ namespace RadiantOrchard.Dev
                        ("Stage +1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage + 1)));
             Header(panel, "Visitors");
             Row(panel, ("Visitor now", DevActions.SpawnVisitor), ("Heal 1", g => DevActions.Heal(g, 1)), ("Heal 10", g => DevActions.Heal(g, 10)));
+            Row(panel, ("Run out patience", DevActions.RunOutPatience));
             Header(panel, "Save");
             RectTransform saveRow = Row(panel, ("Dump save", DevActions.DumpSave));
             Button delete = MakeButton(saveRow, "Delete save", DangerColour, () => Run(DevActions.DeleteSave));

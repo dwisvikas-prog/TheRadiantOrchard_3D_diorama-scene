@@ -1,6 +1,6 @@
 namespace RadiantOrchard.Gameplay
 {
-    /// <summary>A healed visitor reached the exit; their spot is free again.</summary>
+    /// <summary>A healed visitor reached the exit. Spot is the path spot they freed, or -1 when they left from the bench.</summary>
     public readonly struct VisitorLeft
     {
         public readonly int VisitorId;

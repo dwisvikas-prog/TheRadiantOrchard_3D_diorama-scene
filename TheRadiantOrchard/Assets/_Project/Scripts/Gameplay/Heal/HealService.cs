@@ -24,7 +24,8 @@ namespace RadiantOrchard.Gameplay
 
         /// <summary>Heals with this fruit's tonic. Returns the seeds paid (0 for an unknown fruit).</summary>
         /// <param name="visitorId">Who was healed, for the colour sweep and pop-up; -1 for dev heals with nobody on the path.</param>
-        public int Heal(string fruitId, int visitorId = -1)
+        /// <param name="fromBench">They were on the bench: half seeds (CLAUDE.md 5.4).</param>
+        public int Heal(string fruitId, int visitorId = -1, bool fromBench = false)
         {
             FruitDefinition fruit = _config.FindFruit(fruitId);
             if (fruit == null)
@@ -33,7 +34,7 @@ namespace RadiantOrchard.Gameplay
                 return 0;
             }
 
-            int seeds = HealRules.SeedsFor(_config.Balance);
+            int seeds = HealRules.SeedsFor(_config.Balance, fromBench);
             _state.Seeds += seeds;
             _state.HealedTotal++;
             _state.HealedSinceQuiz++;

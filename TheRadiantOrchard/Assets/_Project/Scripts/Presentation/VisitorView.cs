@@ -6,7 +6,8 @@ namespace RadiantOrchard.Presentation
 {
     /// <summary>
     /// One pooled visitor figure (CLAUDE.md 5.4): grey body and head, a thought bubble with the requested fruit and a
-    /// patience bar that runs green to red. Healing turns them to the fruit's colour and they walk off coloured.
+    /// patience bar that runs green to red (hidden on the bench, where nobody waits against a clock). Healing turns
+    /// them to the fruit's colour and they walk off coloured.
     /// Placeholder shapes until the stick-figure art (CHAR) exists. Moved by VisitorsPresenter; no Update of its own.
     /// </summary>
     public sealed class VisitorView : MonoBehaviour
@@ -50,6 +51,13 @@ namespace RadiantOrchard.Presentation
             else _bubbleFruit.color = fruit != null ? fruit.Tint : Color.white;
             _shownPatience = -1f;
             SetPatience(1f);
+        }
+
+        /// <summary>The patience bar is shown on the path and hidden once their patience has run out.</summary>
+        public void ShowPatienceBar(bool show)
+        {
+            GameObject bar = _patienceFill.parent.gameObject;
+            if (bar.activeSelf != show) bar.SetActive(show);
         }
 
         public void MoveTo(Vector2 position) => transform.position = new Vector3(position.x, position.y, 0f);

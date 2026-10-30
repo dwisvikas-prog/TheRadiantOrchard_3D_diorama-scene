@@ -49,7 +49,7 @@ namespace RadiantOrchard.Tests.EditMode
             GameState state = _save.Load(_config.Balance);
             var plots = new PlotManager(state, _config, time, events, _save.MarkDirty);
             var heal = new HealService(state, _config, events, _save.MarkDirty);
-            var visitors = new VisitorManager(state, _config, events, heal, new System.Random(1));
+            var visitors = new VisitorManager(state, _config, time, events, heal, _save.MarkDirty, new System.Random(1));
             _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors);
         }
 
