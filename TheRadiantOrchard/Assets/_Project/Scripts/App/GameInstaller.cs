@@ -23,6 +23,7 @@ namespace RadiantOrchard.App
         [SerializeField] private VisitorsPresenter _visitorViews;
         [SerializeField] private VirtuePopups _popups;
         [SerializeField] private HudView _hud;
+        [SerializeField] private BasketView _basket;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -31,7 +32,8 @@ namespace RadiantOrchard.App
         private HealService _heal;
         private HealPresenter _healPresenter;
         private VisitorManager _visitors;
-        private HarvestDelivery _delivery;
+        private DeliveryService _delivery;
+        private HarvestDelivery _deliveryViews;
 
         private void Awake()
         {
@@ -44,9 +46,9 @@ namespace RadiantOrchard.App
             }
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
-                || _visitorViews == null || _popups == null || _hud == null)
+                || _visitorViews == null || _popups == null || _hud == null || _basket == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups and HUD must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD and Basket must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -62,16 +64,22 @@ namespace RadiantOrchard.App
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty);
             _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
             services.Clock.Ticked += TickVisitors;
+            _delivery = new DeliveryService(services.State, services.Config, services.Events, _visitors, services.Save.MarkDirty);
+            _plots.HarvestGate = _delivery.CanTake;
+            // After the visitors' tick, so a visitor who just reached their spot gets basket fruit the same tick.
+            services.Clock.Ticked += _delivery.Tick;
             _visitorViews.Init(_visitors, services.Config, services.Events, _farmView);
             _healPresenter = new HealPresenter(_visitorViews, _popups, services.Config, services.Events);
-            _delivery = new HarvestDelivery(services.Events, _visitors, _visitorViews, _tonics, _farmView, services.Config);
             _hud.Init(services.State, services.Events, services.Config.Strings);
+            _basket.Init(services.Config, services.State, services.Events);
+            _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
+                _cameraController.GetComponent<Camera>(), services.Config);
             // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
             _visitors.ArriveAfterAway(services.LaunchTimeAway);
             services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
@@ -94,6 +102,7 @@ namespace RadiantOrchard.App
 #endif
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
+            if (_delivery != null) _services.Clock.Ticked -= _delivery.Tick;
             if (_visitors != null)
             {
                 _services.Clock.Ticked -= TickVisitors;
@@ -102,6 +111,7 @@ namespace RadiantOrchard.App
             _plotsPresenter?.Dispose();
             _pointer?.Dispose();
             _healPresenter?.Dispose();
+            _deliveryViews?.Dispose();
             _delivery?.Dispose();
         }
     }

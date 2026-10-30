@@ -9,5 +9,7 @@ namespace RadiantOrchard.Gameplay
         Harvest = 1,
         /// <summary>A different gesture on a ripe tree: wobble and a soft sound, never a silent fail (CLAUDE.md 5.5).</summary>
         WrongGesture = 2,
+        /// <summary>The right gesture, but the fruit has nowhere to go: it stays on the tree (HarvestHeld).</summary>
+        Held = 3,
     }
 }

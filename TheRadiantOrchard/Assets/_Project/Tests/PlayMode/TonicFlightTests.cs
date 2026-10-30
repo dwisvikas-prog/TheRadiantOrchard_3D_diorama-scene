@@ -5,6 +5,7 @@ using NUnit.Framework;
 using RadiantOrchard.App;
 using RadiantOrchard.Gameplay;
 using RadiantOrchard.Presentation;
+using RadiantOrchard.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -64,9 +65,10 @@ namespace RadiantOrchard.Tests.PlayMode
 
             Assert.AreEqual(1, arrivals);
             Assert.AreEqual("strawberry", arrivedFruit);
-            // Nobody is waiting yet, so the tonic lands over the first waiting spot.
-            var farm = Object.FindFirstObjectByType<FarmView>();
-            Assert.Less(Vector2.Distance(landed, farm.WaitingSpots[0].position), 2f, "The tonic lands at its target.");
+            // Nobody is waiting yet, so the tonic flies into the HUD basket.
+            Vector2 basket = Object.FindFirstObjectByType<BasketView>().AnchorScreenPoint;
+            Vector2 basketWorld = Camera.main.ScreenToWorldPoint(new Vector3(basket.x, basket.y, -Camera.main.transform.position.z));
+            Assert.Less(Vector2.Distance(landed, basketWorld), 0.5f, "The tonic lands at its target.");
             Assert.AreEqual(0, _tonics.ActiveCount, "Back in the pool after the pop.");
             Assert.AreEqual(pooled, _tonics.PooledCount, "No new tonic was created.");
         }
@@ -81,7 +83,8 @@ namespace RadiantOrchard.Tests.PlayMode
             yield return new WaitForSeconds(FlightAndPop + 0.3f);
             Assert.AreEqual(0, _tonics.ActiveCount);
 
-            for (int plot = 0; plot < 3; plot++) _services.Events.Publish(new FruitHarvested(plot, "strawberry"));
+            // A different fruit: the three strawberries fill their basket.
+            for (int plot = 0; plot < 3; plot++) _services.Events.Publish(new FruitHarvested(plot, "pineapple"));
             Assert.AreEqual(3, _tonics.ActiveCount);
             Assert.AreEqual(pooled, _tonics.PooledCount, "Pre-warmed tonics are reused, not re-created.");
         }

@@ -149,3 +149,9 @@ MonoBehaviour:
     _text: '{0}h {1:00}m'
   - _key: ui.hud.seeds
     _text: 'Seeds: {0}'
+  - _key: ui.basket.title
+    _text: Basket
+  - _key: ui.basket.count
+    _text: "×{0}"
+  - _key: ui.basket.full
+    _text: Basket full

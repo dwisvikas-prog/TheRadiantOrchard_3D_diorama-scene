@@ -31,6 +31,12 @@ namespace RadiantOrchard.Gameplay
 
         public int Count => _state.Plots.Count;
 
+        /// <summary>
+        /// Asked before a gesture picks a fruit: false keeps it on the tree (DeliveryService.CanTake: nobody wants it and
+        /// its basket is full). Null lets every harvest through.
+        /// </summary>
+        public Func<string, bool> HarvestGate { get; set; }
+
         public PlotInfo Get(int index)
         {
             if (!IsValid(index)) return default;
@@ -115,6 +121,11 @@ namespace RadiantOrchard.Gameplay
 
         private HarvestJudgement Apply(int index, HarvestJudgement judgement)
         {
+            if (judgement == HarvestJudgement.Harvest && HarvestGate != null && !HarvestGate(_state.Plots[index].FruitId))
+            {
+                _events.Publish(new HarvestHeld(index, _state.Plots[index].FruitId));
+                return HarvestJudgement.Held;
+            }
             if (judgement == HarvestJudgement.Harvest && !TryHarvest(index, out _)) return HarvestJudgement.Ignore;
             if (judgement == HarvestJudgement.WrongGesture) _events.Publish(new HarvestRejected(index, _state.Plots[index].FruitId));
             return judgement;

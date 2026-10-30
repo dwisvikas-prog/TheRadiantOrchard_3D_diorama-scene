@@ -82,6 +82,7 @@ namespace RadiantOrchard.Editor
             // The HUD sits under the menu in the hierarchy so the menu's backdrop covers it while open.
             HudView hud = BuildHud(canvasGo.transform, bold);
             hud.transform.SetAsFirstSibling();
+            BasketView basket = BuildBasket(hud.transform, bold);
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -92,11 +93,12 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_gestures").objectReferenceValue = gestures;
             so.FindProperty("_plantMenu").objectReferenceValue = menu.GetComponent<PlantMenuView>();
             so.FindProperty("_hud").objectReferenceValue = hud;
+            so.FindProperty("_basket").objectReferenceValue = basket;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD and PlantMenu prefab built; GestureRecognizer, PlantMenu and HUD wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD and Basket wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -177,6 +179,66 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_seeds").objectReferenceValue = seeds;
             so.ApplyModifiedPropertiesWithoutUndo();
             return hud;
+        }
+
+        // Basket pill under the seed counter: a title (where tonics land) and one chip per fruit, laid out left to right
+        // and only as wide as the chips showing.
+        private static BasketView BuildBasket(Transform hud, TMP_FontAsset bold)
+        {
+            var pill = Rect("Basket", hud);
+            pill.anchorMin = pill.anchorMax = new Vector2(0f, 1f);
+            pill.pivot = new Vector2(0f, 1f);
+            pill.sizeDelta = new Vector2(200f, 70f);
+            pill.anchoredPosition = new Vector2(40f, -125f);
+            var pillImage = pill.gameObject.AddComponent<Image>();
+            pillImage.color = Cream;
+            pillImage.raycastTarget = false;
+            var row = pill.gameObject.AddComponent<HorizontalLayoutGroup>();
+            row.padding = new RectOffset(18, 18, 8, 8);
+            row.spacing = 12f;
+            row.childAlignment = TextAnchor.MiddleLeft;
+            row.childControlWidth = true;
+            row.childControlHeight = true;
+            row.childForceExpandWidth = false;
+            row.childForceExpandHeight = false;
+            pill.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            TMP_Text title = Text("Title", pill, 28f, Ink, bold);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            Size(title.rectTransform, 100f, 50f);
+
+            var chip = Rect("ChipTemplate", pill);
+            Size(chip, 104f, 54f);
+            var icon = Rect("Icon", chip);
+            Anchor(icon, new Vector2(0f, 0.5f), new Vector2(40f, 40f), new Vector2(22f, 0f));
+            var iconImage = icon.gameObject.AddComponent<Image>();
+            iconImage.raycastTarget = false;
+            TMP_Text count = Text("Count", chip, 28f, Accent, bold);
+            count.alignment = TextAlignmentOptions.Left;
+            count.textWrappingMode = TextWrappingModes.NoWrap;
+            Anchor(count.rectTransform, new Vector2(0f, 0.5f), new Vector2(60f, 50f), new Vector2(76f, 0f));
+            var chipView = chip.gameObject.AddComponent<BasketChipView>();
+            var chipSo = new SerializedObject(chipView);
+            chipSo.FindProperty("_icon").objectReferenceValue = iconImage;
+            chipSo.FindProperty("_count").objectReferenceValue = count;
+            chipSo.ApplyModifiedPropertiesWithoutUndo();
+            chip.gameObject.SetActive(false);
+
+            var basket = pill.gameObject.AddComponent<BasketView>();
+            var so = new SerializedObject(basket);
+            so.FindProperty("_title").objectReferenceValue = title;
+            so.FindProperty("_anchor").objectReferenceValue = title.rectTransform;
+            so.FindProperty("_chipTemplate").objectReferenceValue = chipView;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return basket;
+        }
+
+        // Fixed preferred size for a child of a layout group.
+        private static void Size(RectTransform rt, float width, float height)
+        {
+            var element = rt.gameObject.AddComponent<LayoutElement>();
+            element.preferredWidth = width;
+            element.preferredHeight = height;
         }
 
         private static FruitOptionView BuildOption(Transform parent, TMP_FontAsset bold)

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using RadiantOrchard.App;
 using RadiantOrchard.Core;
 using RadiantOrchard.Gameplay;
+using RadiantOrchard.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -13,8 +14,8 @@ using Object = UnityEngine.Object;
 namespace RadiantOrchard.Tests.PlayMode
 {
     /// <summary>
-    /// The Week 1 loop in the real Game scene (W1·21): plant → ripen → harvest → tonic → heal. Only the fruit the
-    /// placeholder visitor asked for (strawberry) heals. Saves go to a temporary folder, never the real save.
+    /// The loop in the real Game scene: plant → ripen → harvest → tonic → heal, and fruit nobody asked for waiting in
+    /// the basket until someone does (W2·07). Saves go to a temporary folder, never the real save.
     /// </summary>
     public class HealLoopTests
     {
@@ -71,7 +72,7 @@ namespace RadiantOrchard.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator AHarvestWithNobodyWaitingPaysNothing()
+        public IEnumerator AHarvestWithNobodyWaitingGoesIntoTheBasket()
         {
             GameState state = _services.State;
             state.Seeds = 100;
@@ -83,8 +84,35 @@ namespace RadiantOrchard.Tests.PlayMode
 
             yield return new WaitForSeconds(TonicFlightAndPop);
 
-            Assert.AreEqual(seedsAfterPlanting, state.Seeds, "Until the Week 2 basket, a tonic nobody is waiting for pays nothing.");
+            Assert.AreEqual(seedsAfterPlanting, state.Seeds, "Nothing is paid until someone is healed.");
             Assert.AreEqual(0, state.HealedTotal);
+            Assert.AreEqual(1, state.GetBasketCount("pineapple"), "It waits in the basket.");
+            // Test code may search the scene; the no-Find rule is for runtime code.
+            BasketChipView chip = Object.FindFirstObjectByType<BasketView>().ChipFor("pineapple");
+            Assert.IsTrue(chip.gameObject.activeInHierarchy, "The HUD basket shows it.");
+        }
+
+        [UnityTest]
+        public IEnumerator AFruitInTheBasketHealsTheNextVisitorWhoAsksForIt()
+        {
+            GameState state = _services.State;
+            VisitorManager visitors = DevGame.Current.Visitors;
+            Assert.AreEqual(PlantResult.Planted, _plots.TryPlant(0, "strawberry"));
+            // Picked in the same frame, before the first visitor has even appeared.
+            _plots.RipenNow(0);
+            Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(0, GestureType.DoubleTap));
+            Assert.AreEqual(1, state.GetBasketCount("strawberry"));
+
+            // The first visitor walks in, asks for a strawberry, and gets the one from the basket.
+            float waited = 0f;
+            while (state.HealedTotal == 0 && waited < 10f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(1, state.HealedTotal, "Healed from the basket.");
+            Assert.AreEqual(_services.Config.Balance.SeedsPerHeal, state.Seeds);
+            Assert.AreEqual(0, state.GetBasketCount("strawberry"));
         }
     }
 }
