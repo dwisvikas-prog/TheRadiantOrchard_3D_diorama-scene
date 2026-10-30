@@ -63,6 +63,8 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.AreEqual("strawberry", visitors.GetAt(0).FruitId, "They ask for the only fruit planted.");
 
             _plots.RipenNow(0);
+            // Real time decides the golden roll; keep this one plain so the reward is fixed.
+            _plots.ForceGolden(0, false);
             Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(0, GestureType.DoubleTap));
             yield return new WaitForSeconds(TonicFlightAndPop);
 
@@ -98,8 +100,9 @@ namespace RadiantOrchard.Tests.PlayMode
             GameState state = _services.State;
             VisitorManager visitors = DevGame.Current.Visitors;
             Assert.AreEqual(PlantResult.Planted, _plots.TryPlant(0, "strawberry"));
-            // Picked in the same frame, before the first visitor has even appeared.
+            // Picked in the same frame, before the first visitor has even appeared; kept plain (see above).
             _plots.RipenNow(0);
+            _plots.ForceGolden(0, false);
             Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(0, GestureType.DoubleTap));
             Assert.AreEqual(1, state.GetBasketCount("strawberry"));
 
@@ -113,6 +116,36 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.AreEqual(1, state.HealedTotal, "Healed from the basket.");
             Assert.AreEqual(_services.Config.Balance.SeedsPerHeal, state.Seeds);
             Assert.AreEqual(0, state.GetBasketCount("strawberry"));
+        }
+
+        [UnityTest]
+        public IEnumerator AGoldenFruitHealsForTripleSeedsWithBothPopUps()
+        {
+            GameState state = _services.State;
+            VisitorManager visitors = DevGame.Current.Visitors;
+            var healed = new System.Collections.Generic.List<VisitorHealed>();
+            _services.Events.Subscribe<VisitorHealed>(healed.Add);
+            Assert.AreEqual(PlantResult.Planted, _plots.TryPlant(0, "strawberry"));
+
+            float waited = 0f;
+            while ((visitors.Count == 0 || visitors.GetAt(0).Phase != VisitorPhase.Waiting) && waited < 8f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            _plots.RipenNow(0);
+            _plots.ForceGolden(0);
+            Assert.IsTrue(_plots.Get(0).IsGolden);
+            Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(0, GestureType.DoubleTap));
+            yield return new WaitForSeconds(TonicFlightAndPop - 0.3f);
+
+            _services.Events.Unsubscribe<VisitorHealed>(healed.Add);
+            Assert.AreEqual(1, healed.Count);
+            Assert.IsTrue(healed[0].Golden);
+            Assert.AreEqual(3 * _services.Config.Balance.SeedsPerHeal, state.Seeds, "CLAUDE.md 5.12: 3x seeds.");
+            // Test code may search the scene; the no-Find rule is for runtime code.
+            Assert.GreaterOrEqual(Object.FindFirstObjectByType<RadiantOrchard.Presentation.VirtuePopups>().ActiveCount, 2,
+                "The virtue name and the seeds pop up.");
         }
     }
 }

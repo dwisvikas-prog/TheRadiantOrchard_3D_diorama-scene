@@ -99,16 +99,32 @@ namespace RadiantOrchard.Core
             return i >= 0 ? _basket[i].Count : 0;
         }
 
-        /// <summary>Sets the basket count for a fruit; a count of 0 or less removes the entry.</summary>
-        public void SetBasketCount(string fruitId, int count)
+        /// <summary>How many of the basket's fruit of this kind are golden.</summary>
+        public int GetBasketGoldenCount(string fruitId)
+        {
+            int i = IndexOf(_basket, fruitId);
+            return i >= 0 ? Math.Min(_basket[i].Golden, _basket[i].Count) : 0;
+        }
+
+        /// <summary>
+        /// Sets the basket count for a fruit and how many of them are golden (clamped to the count); a count of 0 or less
+        /// removes the entry.
+        /// </summary>
+        public void SetBasketCount(string fruitId, int count, int golden = 0)
         {
             int i = IndexOf(_basket, fruitId);
             if (count <= 0)
             {
                 if (i >= 0) _basket.RemoveAt(i);
+                return;
             }
-            else if (i >= 0) _basket[i].Count = count;
-            else _basket.Add(new FruitCount(fruitId, count));
+            if (i < 0)
+            {
+                _basket.Add(new FruitCount(fruitId, count));
+                i = _basket.Count - 1;
+            }
+            _basket[i].Count = count;
+            _basket[i].Golden = Math.Max(0, Math.Min(golden, count));
         }
 
         /// <summary>When a bloom fruit was last harvested (Unix ms UTC), or 0 if never.</summary>

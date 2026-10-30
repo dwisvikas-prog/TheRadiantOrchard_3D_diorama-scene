@@ -6,12 +6,14 @@ namespace RadiantOrchard.Gameplay
         public readonly int FromPlot;
         public readonly string FruitId;
         public readonly int Count;
+        public readonly bool IsGolden;
 
-        public FruitBasketed(int fromPlot, string fruitId, int count)
+        public FruitBasketed(int fromPlot, string fruitId, int count, bool isGolden = false)
         {
             FromPlot = fromPlot;
             FruitId = fruitId;
             Count = count;
+            IsGolden = isGolden;
         }
     }
 }

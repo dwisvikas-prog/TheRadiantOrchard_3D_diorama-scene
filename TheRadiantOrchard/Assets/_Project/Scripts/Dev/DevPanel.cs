@@ -113,9 +113,9 @@ namespace RadiantOrchard.Dev
             Row(panel, ("+1 min", g => DevActions.AddTime(g, TimeSpan.FromMinutes(1))),
                        ("+1 hr", g => DevActions.AddTime(g, TimeSpan.FromHours(1))),
                        ("+1 day", g => DevActions.AddTime(g, TimeSpan.FromDays(1))));
-            Row(panel, ("Real time", DevActions.ResetTime));
+            Row(panel, ("Real time", DevActions.ResetTime), ("Golden Harvest", DevActions.GoldenHarvest));
             Header(panel, "Economy");
-            Row(panel, ($"+{SeedsToAdd} seeds", g => DevActions.AddSeeds(g, SeedsToAdd)), ("Ripen all", DevActions.RipenAll));
+            Row(panel, ($"+{SeedsToAdd} seeds", g => DevActions.AddSeeds(g, SeedsToAdd)), ("Ripen all", DevActions.RipenAll), ("Ripen golden", DevActions.RipenGolden));
             _stage = Header(panel, "Stage -");
             Row(panel, ("Stage -1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage - 1)),
                        ("Stage +1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage + 1)));

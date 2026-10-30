@@ -6,12 +6,14 @@ namespace RadiantOrchard.Gameplay
         public readonly int FromPlot;
         public readonly string FruitId;
         public readonly int VisitorId;
+        public readonly bool IsGolden;
 
-        public DeliveryStarted(int fromPlot, string fruitId, int visitorId)
+        public DeliveryStarted(int fromPlot, string fruitId, int visitorId, bool isGolden = false)
         {
             FromPlot = fromPlot;
             FruitId = fruitId;
             VisitorId = visitorId;
+            IsGolden = isGolden;
         }
     }
 }

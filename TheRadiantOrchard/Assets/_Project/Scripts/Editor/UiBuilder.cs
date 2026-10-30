@@ -83,6 +83,7 @@ namespace RadiantOrchard.Editor
             HudView hud = BuildHud(canvasGo.transform, bold);
             hud.transform.SetAsFirstSibling();
             BasketView basket = BuildBasket(hud.transform, bold);
+            ComboView combo = BuildCombo(hud.transform, bold);
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -94,11 +95,12 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_plantMenu").objectReferenceValue = menu.GetComponent<PlantMenuView>();
             so.FindProperty("_hud").objectReferenceValue = hud;
             so.FindProperty("_basket").objectReferenceValue = basket;
+            so.FindProperty("_combo").objectReferenceValue = combo;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD and Basket wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket and Combo wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -231,6 +233,29 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_chipTemplate").objectReferenceValue = chipView;
             so.ApplyModifiedPropertiesWithoutUndo();
             return basket;
+        }
+
+        // Combo counter at the top centre; hidden until the second quick heal.
+        private static ComboView BuildCombo(Transform hud, TMP_FontAsset bold)
+        {
+            var holder = Rect("Combo", hud);
+            Stretch(holder);
+            var pill = Rect("Pill", holder);
+            Anchor(pill, new Vector2(0.5f, 1f), new Vector2(300f, 76f), new Vector2(0f, -70f));
+            var pillImage = pill.gameObject.AddComponent<Image>();
+            pillImage.color = Accent;
+            pillImage.raycastTarget = false;
+            TMP_Text text = Text("Text", pill, 38f, Cream, bold);
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            Stretch(text.rectTransform);
+
+            var combo = holder.gameObject.AddComponent<ComboView>();
+            var so = new SerializedObject(combo);
+            so.FindProperty("_root").objectReferenceValue = pill.gameObject;
+            so.FindProperty("_text").objectReferenceValue = text;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            pill.gameObject.SetActive(false);
+            return combo;
         }
 
         // Fixed preferred size for a child of a layout group.

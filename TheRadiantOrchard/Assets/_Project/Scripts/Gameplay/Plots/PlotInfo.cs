@@ -9,8 +9,10 @@ namespace RadiantOrchard.Gameplay
         public readonly TreeStage Stage;
         public readonly int SecondsUntilRipe;
         public readonly float Progress;
+        /// <summary>The ripe fruit is golden (CLAUDE.md 5.12); always false before it is ripe.</summary>
+        public readonly bool IsGolden;
 
-        public PlotInfo(int index, bool unlocked, string fruitId, TreeStage stage, int secondsUntilRipe, float progress)
+        public PlotInfo(int index, bool unlocked, string fruitId, TreeStage stage, int secondsUntilRipe, float progress, bool isGolden = false)
         {
             Index = index;
             Unlocked = unlocked;
@@ -18,6 +20,7 @@ namespace RadiantOrchard.Gameplay
             Stage = stage;
             SecondsUntilRipe = secondsUntilRipe;
             Progress = progress;
+            IsGolden = isGolden && stage == TreeStage.Ripe;
         }
 
         public bool IsEmpty => Stage == TreeStage.Empty;

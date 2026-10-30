@@ -177,11 +177,12 @@ namespace RadiantOrchard.Gameplay
         }
 
         /// <summary>
-        /// A tonic reached this visitor: heals them (seeds, counters, save; half seeds on the bench) and sends them to the
+        /// A tonic reached this visitor: heals them (seeds, counters, save; half seeds on the bench, more for a golden
+        /// fruit) and sends them to the
         /// exit. A bench visitor gets up at once, so the seat is free for the next. Returns the seeds paid; 0 if they are
         /// gone or did not ask for this fruit.
         /// </summary>
-        public int Deliver(int visitorId, string fruitId)
+        public int Deliver(int visitorId, string fruitId, bool golden = false)
         {
             Visitor v = Find(visitorId);
             if (v == null) return 0;
@@ -189,7 +190,7 @@ namespace RadiantOrchard.Gameplay
             bool onBench = v.Phase == VisitorPhase.Sitting;
             if ((v.Phase != VisitorPhase.Waiting && !onBench) || !HealRules.Accepts(v.FruitId, fruitId)) return 0;
 
-            int seeds = _heal.Heal(fruitId, visitorId, onBench);
+            int seeds = _heal.Heal(fruitId, visitorId, onBench, golden);
             if (onBench) _bench.StandUp(v);
             v.Phase = VisitorPhase.Leaving;
             v.Elapsed = 0f;

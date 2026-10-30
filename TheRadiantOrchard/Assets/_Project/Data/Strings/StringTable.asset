@@ -155,3 +155,7 @@ MonoBehaviour:
     _text: "×{0}"
   - _key: ui.basket.full
     _text: Basket full
+  - _key: ui.heal.seeds
+    _text: '+{0}'
+  - _key: ui.combo
+    _text: "Combo ×{0}"

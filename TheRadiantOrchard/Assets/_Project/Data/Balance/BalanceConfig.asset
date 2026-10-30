@@ -38,6 +38,7 @@ MonoBehaviour:
   _goldenFruitChance: 0.05
   _goldenFruitSeedMultiplier: 3
   _comboWindowSeconds: 4
+  _comboMaxMultiplier: 5
   _wellTextMaxLength: 60
   _longPressSeconds: 0.55
   _tapMaxSeconds: 0.3

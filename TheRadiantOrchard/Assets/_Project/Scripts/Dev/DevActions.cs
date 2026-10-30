@@ -57,6 +57,26 @@ namespace RadiantOrchard.Dev
             return $"Ripened {game.Plots.RipenAll()} tree(s).";
         }
 
+        /// <summary>Ripens every planted tree and makes each fruit golden (CLAUDE.md 5.12), to test golden harvests.</summary>
+        public static string RipenGolden(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            game.Plots.RipenAll();
+            int golden = 0;
+            for (int i = 0; i < game.Plots.Count; i++)
+                if (game.Plots.ForceGolden(i)) golden++;
+            return golden > 0 ? $"{golden} golden fruit ripe." : "Nothing planted.";
+        }
+
+        /// <summary>Starts Golden Harvest (CLAUDE.md 5.8) as the quiz will: double seeds for GoldenHarvestSeconds.</summary>
+        public static string GoldenHarvest(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            BalanceConfig b = game.Config.Balance;
+            game.Boosts.Start(BoostService.GoldenHarvest, b.GoldenHarvestSeedMultiplier, b.GoldenHarvestSeconds);
+            return $"Golden Harvest: x{b.GoldenHarvestSeedMultiplier} seeds for {b.GoldenHarvestSeconds:0} s.";
+        }
+
         /// <summary>Heals count visitors through the real heal path (seeds, counters, events, save).</summary>
         public static string Heal(DevGame game, int count)
         {

@@ -69,6 +69,8 @@ namespace RadiantOrchard.Core
         [Header("Combo (5.13)")]
         [Tooltip("A heal within this many seconds of the previous one grows the combo.")]
         [Min(0.1f)] [SerializeField] private float _comboWindowSeconds = 4f;
+        [Tooltip("The combo multiplies seeds by its count (2nd heal x2, 3rd x3...) up to this.")]
+        [Min(1)] [SerializeField] private int _comboMaxMultiplier = 5;
 
         [Header("Stone Well (5.14)")]
         [Min(1)] [SerializeField] private int _wellTextMaxLength = 60;
@@ -147,6 +149,7 @@ namespace RadiantOrchard.Core
         public int GoldenFruitSeedMultiplier => _goldenFruitSeedMultiplier;
 
         public float ComboWindowSeconds => _comboWindowSeconds;
+        public int ComboMaxMultiplier => _comboMaxMultiplier;
 
         public int WellTextMaxLength => _wellTextMaxLength;
 

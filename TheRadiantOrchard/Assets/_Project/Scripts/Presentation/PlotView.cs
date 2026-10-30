@@ -8,7 +8,8 @@ namespace RadiantOrchard.Presentation
 {
     /// <summary>
     /// Shows one plot: soil, tree, fruit and the growth countdown. Uses the fruit's own stage sprites when the art exists; until then a
-    /// tinted placeholder block sized per stage. Never changes game state itself; it only calls PlotManager.
+    /// tinted placeholder block sized per stage. A ripe golden fruit (CLAUDE.md 5.12) shows gold and pulses gently
+    /// (sparkle VFX in W3). Never changes game state itself; it only calls PlotManager.
     /// </summary>
     public sealed class PlotView : MonoBehaviour
     {
@@ -30,10 +31,17 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private float _wobbleSeconds = 0.4f;
         [SerializeField] private int _wobbleSwings = 3;
 
+        [Header("Golden fruit (placeholder look)")]
+        [SerializeField] private float _goldenPulseScale = 1.25f;
+        [SerializeField] private float _goldenPulseSeconds = 0.9f;
+
         private Sprite _placeholderTree;
         private int _index = -1;
         private PlotManager _plots;
         private Coroutine _wobble;
+        private Coroutine _goldenPulse;
+        private Vector3 _fruitScale = Vector3.one;
+        private bool _golden;
 
         public int Index => _index;
 
@@ -51,6 +59,7 @@ namespace RadiantOrchard.Presentation
         {
             _soil.color = info.Unlocked ? Color.white : _lockedTint;
             _timer.SetActive(info.IsGrowing);
+            SetGolden(info.IsGolden && fruit != null);
 
             if (info.IsEmpty || fruit == null)
             {
@@ -67,7 +76,7 @@ namespace RadiantOrchard.Presentation
             if (art != null)
             {
                 _tree.sprite = art;
-                _tree.color = Color.white;
+                _tree.color = _golden ? GoldenLook.Tint : Color.white;
                 _tree.transform.localScale = Vector3.one;
                 _fruit.enabled = false;
                 return;
@@ -78,7 +87,28 @@ namespace RadiantOrchard.Presentation
             SizeTo(_tree, sapling ? _saplingSize : _growingSize);
             _tree.color = sapling ? _saplingColour : _growingColour;
             _fruit.enabled = info.IsRipe;
-            _fruit.color = fruit.Tint;
+            _fruit.color = _golden ? GoldenLook.Tint : fruit.Tint;
+        }
+
+        private void SetGolden(bool golden)
+        {
+            if (golden == _golden) return;
+            _golden = golden;
+            if (_goldenPulse != null) StopCoroutine(_goldenPulse);
+            _goldenPulse = null;
+            _fruit.transform.localScale = _fruitScale;
+            if (golden && isActiveAndEnabled) _goldenPulse = StartCoroutine(GoldenPulse());
+        }
+
+        private IEnumerator GoldenPulse()
+        {
+            Transform t = _fruit.transform;
+            for (float elapsed = 0f; ; elapsed += Time.deltaTime)
+            {
+                float k = 0.5f - 0.5f * Mathf.Cos(elapsed / _goldenPulseSeconds * 2f * Mathf.PI);
+                t.localScale = _fruitScale * Mathf.Lerp(1f, _goldenPulseScale, k);
+                yield return null;
+            }
         }
 
         /// <summary>
@@ -118,6 +148,9 @@ namespace RadiantOrchard.Presentation
         private void OnDisable()
         {
             _wobble = null;
+            _goldenPulse = null;
+            _golden = false;
+            if (_fruit != null) _fruit.transform.localScale = _fruitScale;
             if (_tree != null) _tree.transform.localRotation = Quaternion.identity;
         }
 
@@ -136,6 +169,7 @@ namespace RadiantOrchard.Presentation
         {
             if (_soil == null || _tree == null || _fruit == null || _timer == null || _timerText == null)
                 Log.Error($"PlotView '{name}': Soil, Tree, Fruit and Timer must be assigned; rebuild the farm.", this);
+            else _fruitScale = _fruit.transform.localScale;
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

@@ -6,11 +6,16 @@ using UnityEngine;
 namespace RadiantOrchard.Presentation
 {
     /// <summary>
-    /// Plays a heal: the healed visitor turns to colour and the virtue name pops up above them (CLAUDE.md 5.6).
-    /// Dev heals with nobody on the path pop up over the first waiting spot. Dispose to unsubscribe.
+    /// Plays a heal (CLAUDE.md 5.6): the healed visitor turns to colour and hops, the virtue name pops up above them and
+    /// the seeds paid just below it, in gold when a bonus (golden fruit, Golden Harvest, combo) raised them. Dev heals
+    /// with nobody on the path pop up over the first waiting spot. Dispose to unsubscribe.
     /// </summary>
     public sealed class HealPresenter : IDisposable
     {
+        public const string SeedsKey = "ui.heal.seeds";
+        private static readonly Color PlainSeedsColour = new Color(1f, 0.97f, 0.88f, 1f);
+        private static readonly Vector2 SeedsOffset = new Vector2(0f, -0.65f);
+
         private readonly VisitorsPresenter _visitors;
         private readonly VirtuePopups _popups;
         private readonly GameConfig _config;
@@ -33,7 +38,9 @@ namespace RadiantOrchard.Presentation
             Color colour = fruit != null ? fruit.Tint : Color.white;
             VisitorView view = _visitors.ViewFor(e.VisitorId);
             if (view != null) view.PlayHeal(colour);
-            _popups.Show(_config.Strings.Get(e.VirtueNameKey), colour, view != null ? view.PopupPoint : _visitors.SpotTarget(0));
+            Vector2 point = view != null ? view.PopupPoint : _visitors.SpotTarget(0);
+            _popups.Show(_config.Strings.Get(e.VirtueNameKey), colour, point);
+            _popups.Show(string.Format(_config.Strings.Get(SeedsKey), e.Seeds), e.HasBonus ? GoldenLook.Tint : PlainSeedsColour, point + SeedsOffset);
         }
     }
 }

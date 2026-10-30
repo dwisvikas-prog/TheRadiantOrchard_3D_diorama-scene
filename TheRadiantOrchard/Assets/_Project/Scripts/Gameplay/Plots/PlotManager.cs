@@ -15,6 +15,9 @@ namespace RadiantOrchard.Gameplay
         private readonly EventBus _events;
         private readonly Action _markDirty;
         private readonly TreeStage[] _lastStages;
+        // Dev and tests: 1 = this plot's current fruit is golden, -1 = it is not, whatever the roll; 0 = the roll decides.
+        // Cleared when the fruit is picked.
+        private readonly sbyte[] _forcedGolden;
 
         public PlotManager(GameState state, GameConfig config, TimeService time, EventBus events, Action markDirty)
         {
@@ -25,6 +28,7 @@ namespace RadiantOrchard.Gameplay
             _markDirty = markDirty ?? throw new ArgumentNullException(nameof(markDirty));
 
             _lastStages = new TreeStage[_state.Plots.Count];
+            _forcedGolden = new sbyte[_state.Plots.Count];
             for (int i = 0; i < _lastStages.Length; i++)
                 _lastStages[i] = StageOf(i, _time.NowUtcMs);
         }
@@ -49,7 +53,28 @@ namespace RadiantOrchard.Gameplay
                 plot.FruitId,
                 StageOf(index, now),
                 GrowthCalculator.SecondsUntilRipe(plot, fruit, now),
-                (float)GrowthCalculator.Progress(plot, fruit, now));
+                (float)GrowthCalculator.Progress(plot, fruit, now),
+                IsGolden(index));
+        }
+
+        /// <summary>Whether the fruit of this plot's current growth cycle is golden (GoldenFruitRules), ripe or not yet.</summary>
+        public bool IsGolden(int index)
+        {
+            if (!IsValid(index) || !_state.Plots[index].IsPlanted) return false;
+            if (_forcedGolden[index] != 0) return _forcedGolden[index] > 0;
+            return GoldenFruitRules.IsGolden(index, GrowthCalculator.CycleStartUtc(_state.Plots[index]), _config.Balance.GoldenFruitChance);
+        }
+
+        /// <summary>
+        /// Dev and tests: makes the current fruit on this plot golden (or plain) whatever the roll, until it is picked.
+        /// False if nothing is planted.
+        /// </summary>
+        public bool ForceGolden(int index, bool golden = true)
+        {
+            if (!IsValid(index) || !_state.Plots[index].IsPlanted) return false;
+            _forcedGolden[index] = golden ? (sbyte)1 : (sbyte)-1;
+            _events.Publish(new PlotStageChanged(index, StageOf(index, _time.NowUtcMs)));
+            return true;
         }
 
         /// <summary>Whether this fruit could be planted here now, and if not, why (for greying out menu options).</summary>
@@ -94,9 +119,11 @@ namespace RadiantOrchard.Gameplay
             if (StageOf(index, _time.NowUtcMs) != TreeStage.Ripe) return false;
 
             fruit = FruitOn(plot);
+            bool golden = IsGolden(index);
+            _forcedGolden[index] = 0;
             plot.LastHarvestUtc = _time.NowUtcMs;
             Changed(index);
-            _events.Publish(new FruitHarvested(index, fruit.Id));
+            _events.Publish(new FruitHarvested(index, fruit.Id, golden));
             return true;
         }
 

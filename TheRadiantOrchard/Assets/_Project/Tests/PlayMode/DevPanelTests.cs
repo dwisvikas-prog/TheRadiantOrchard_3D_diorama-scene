@@ -45,7 +45,7 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.IsFalse(panel.IsOpen);
             panel.Toggle();
             Assert.IsTrue(panel.IsOpen);
-            Assert.GreaterOrEqual(panel.ButtonCount, 15, "DEV + 14 action buttons.");
+            Assert.GreaterOrEqual(panel.ButtonCount, 17, "DEV + 16 action buttons.");
             panel.Toggle();
             yield return null;
         }

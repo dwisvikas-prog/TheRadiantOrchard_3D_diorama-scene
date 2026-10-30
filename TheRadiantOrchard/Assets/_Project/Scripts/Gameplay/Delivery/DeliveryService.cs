@@ -9,7 +9,7 @@ namespace RadiantOrchard.Gameplay
     /// basket hands fruit to matching visitors as soon as they can be served. A harvest is only allowed when the fruit
     /// has somewhere to go (CanTake, PlotManager's harvest gate): with the basket full and nobody asking, it stays on
     /// the tree, so fruit is never thrown away. Views fly the tonics from DeliveryStarted / FruitBasketed and report
-    /// landings through Complete. Dispose to unsubscribe.
+    /// landings through Complete. Golden fruit stay golden in the basket and leave it first. Dispose to unsubscribe.
     /// </summary>
     public sealed class DeliveryService : IDisposable
     {
@@ -52,8 +52,10 @@ namespace RadiantOrchard.Gameplay
                 int visitor = Reserve(fruitId);
                 if (visitor == DeliveryTargeting.Nobody) continue;
 
-                SetBasket(fruitId, count - 1);
-                _events.Publish(new DeliveryStarted(FromBasket, fruitId, visitor));
+                int golden = _state.GetBasketGoldenCount(fruitId);
+                bool isGolden = golden > 0;
+                SetBasket(fruitId, count - 1, isGolden ? golden - 1 : golden);
+                _events.Publish(new DeliveryStarted(FromBasket, fruitId, visitor, isGolden));
             }
         }
 
@@ -61,13 +63,13 @@ namespace RadiantOrchard.Gameplay
         /// A tonic reached its visitor: heals them. If they cannot take it after all, the fruit goes back into the basket
         /// (when there is room). Returns the seeds paid.
         /// </summary>
-        public int Complete(int visitorId, string fruitId)
+        public int Complete(int visitorId, string fruitId, bool golden = false)
         {
-            int seeds = _visitors.Deliver(visitorId, fruitId);
+            int seeds = _visitors.Deliver(visitorId, fruitId, golden);
             if (seeds > 0) return seeds;
 
             int count = BasketCount(fruitId);
-            if (count < _config.Balance.BasketMaxPerFruit) SetBasket(fruitId, count + 1);
+            if (count < _config.Balance.BasketMaxPerFruit) AddToBasket(fruitId, golden);
             else Log.Warn($"DeliveryService: visitor {visitorId} could not take {fruitId} and the basket is full; the fruit is lost.");
             return 0;
         }
@@ -77,7 +79,7 @@ namespace RadiantOrchard.Gameplay
             int visitor = Reserve(e.FruitId);
             if (visitor != DeliveryTargeting.Nobody)
             {
-                _events.Publish(new DeliveryStarted(e.Plot, e.FruitId, visitor));
+                _events.Publish(new DeliveryStarted(e.Plot, e.FruitId, visitor, e.IsGolden));
                 return;
             }
 
@@ -88,8 +90,8 @@ namespace RadiantOrchard.Gameplay
                 Log.Warn($"DeliveryService: {e.FruitId} was harvested with nobody to take it and a full basket; the fruit is lost.");
                 return;
             }
-            SetBasket(e.FruitId, count + 1);
-            _events.Publish(new FruitBasketed(e.Plot, e.FruitId, count + 1));
+            AddToBasket(e.FruitId, e.IsGolden);
+            _events.Publish(new FruitBasketed(e.Plot, e.FruitId, count + 1, e.IsGolden));
         }
 
         private int Reserve(string fruitId)
@@ -98,9 +100,15 @@ namespace RadiantOrchard.Gameplay
             return visitor != DeliveryTargeting.Nobody && _visitors.TryReserve(visitor) ? visitor : DeliveryTargeting.Nobody;
         }
 
-        private void SetBasket(string fruitId, int count)
+        private void AddToBasket(string fruitId, bool golden)
         {
-            _state.SetBasketCount(fruitId, count);
+            int golds = _state.GetBasketGoldenCount(fruitId);
+            SetBasket(fruitId, BasketCount(fruitId) + 1, golden ? golds + 1 : golds);
+        }
+
+        private void SetBasket(string fruitId, int count, int golden)
+        {
+            _state.SetBasketCount(fruitId, count, golden);
             _markDirty();
             _events.Publish(new BasketChanged(fruitId, count));
         }

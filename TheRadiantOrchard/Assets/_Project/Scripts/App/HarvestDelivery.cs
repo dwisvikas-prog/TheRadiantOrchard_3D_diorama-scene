@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RadiantOrchard.Core;
 using RadiantOrchard.Gameplay;
 using RadiantOrchard.Presentation;
@@ -11,7 +12,7 @@ namespace RadiantOrchard.App
     /// Shows DeliveryService's decisions (CLAUDE.md 5.5): a tonic flies from the tree (or the HUD basket) to the visitor
     /// it was sent to, or from the tree into the basket; a landing on a visitor is reported back so they are healed. A
     /// harvest held back because the basket is full shows a short note over the tree. Lives in the composition root
-    /// because it joins Gameplay, Presentation and the HUD. Dispose to unsubscribe.
+    /// because it joins Gameplay, Presentation and the HUD. Golden fruit fly gold. Dispose to unsubscribe.
     /// </summary>
     public sealed class HarvestDelivery : IDisposable
     {
@@ -27,6 +28,8 @@ namespace RadiantOrchard.App
         private readonly BasketView _basket;
         private readonly Camera _camera;
         private readonly GameConfig _config;
+        // Visitors with a golden tonic in the air; a visitor has at most one tonic coming, so the id is enough.
+        private readonly HashSet<int> _goldenTonics = new HashSet<int>();
 
         public HarvestDelivery(EventBus events, DeliveryService delivery, VisitorsPresenter visitorViews, TonicFlights tonics,
             VirtuePopups popups, FarmView farm, BasketView basket, Camera camera, GameConfig config)
@@ -64,26 +67,28 @@ namespace RadiantOrchard.App
         private void OnDeliveryStarted(DeliveryStarted e)
         {
             Vector2 from = e.FromPlot == DeliveryService.FromBasket ? BasketWorldPoint() : FruitPoint(e.FromPlot);
-            _tonics.Launch(from, _visitorViews.TonicTarget(e.VisitorId), Tint(e.FruitId), e.FruitId, e.VisitorId);
+            if (e.IsGolden) _goldenTonics.Add(e.VisitorId);
+            _tonics.Launch(from, _visitorViews.TonicTarget(e.VisitorId), Tint(e.FruitId, e.IsGolden), e.FruitId, e.VisitorId);
         }
 
         private void OnBasketed(FruitBasketed e) =>
-            _tonics.Launch(FruitPoint(e.FromPlot), BasketWorldPoint(), Tint(e.FruitId), e.FruitId, IntoBasket);
+            _tonics.Launch(FruitPoint(e.FromPlot), BasketWorldPoint(), Tint(e.FruitId, e.IsGolden), e.FruitId, IntoBasket);
 
         private void OnHeld(HarvestHeld e) =>
-            _popups.Show(_config.Strings.Get(BasketFullKey), Tint(e.FruitId), FruitPoint(e.Plot));
+            _popups.Show(_config.Strings.Get(BasketFullKey), Tint(e.FruitId, false), FruitPoint(e.Plot));
 
         private void OnTonicArrived(string fruitId, int visitor, Vector2 point)
         {
-            if (visitor != IntoBasket) _delivery.Complete(visitor, fruitId);
+            if (visitor != IntoBasket) _delivery.Complete(visitor, fruitId, _goldenTonics.Remove(visitor));
         }
 
         // The fruit on that plot's tree; the basket when the plot is unknown (fruit from code, not a tree).
         private Vector2 FruitPoint(int plot) =>
             plot >= 0 && plot < _farm.Plots.Count && _farm.Plots[plot] != null ? _farm.Plots[plot].FruitPosition : BasketWorldPoint();
 
-        private Color Tint(string fruitId)
+        private Color Tint(string fruitId, bool golden)
         {
+            if (golden) return GoldenLook.Tint;
             FruitDefinition fruit = _config.FindFruit(fruitId);
             return fruit != null ? fruit.Tint : Color.white;
         }

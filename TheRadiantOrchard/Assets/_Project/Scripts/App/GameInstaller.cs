@@ -24,12 +24,14 @@ namespace RadiantOrchard.App
         [SerializeField] private VirtuePopups _popups;
         [SerializeField] private HudView _hud;
         [SerializeField] private BasketView _basket;
+        [SerializeField] private ComboView _combo;
 
         private AppServices _services;
         private PlotManager _plots;
         private PlotsPresenter _plotsPresenter;
         private FarmPointerHandler _pointer;
         private HealService _heal;
+        private BoostService _boosts;
         private HealPresenter _healPresenter;
         private VisitorManager _visitors;
         private DeliveryService _delivery;
@@ -46,9 +48,9 @@ namespace RadiantOrchard.App
             }
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
-                || _visitorViews == null || _popups == null || _hud == null || _basket == null)
+                || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD and Basket must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket and Combo must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -61,7 +63,9 @@ namespace RadiantOrchard.App
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
-            _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty);
+            _boosts = new BoostService(services.Events);
+            services.Clock.Ticked += TickBoosts;
+            _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty, services.Time, _boosts);
             _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
             services.Clock.Ticked += TickVisitors;
             _delivery = new DeliveryService(services.State, services.Config, services.Events, _visitors, services.Save.MarkDirty);
@@ -72,6 +76,7 @@ namespace RadiantOrchard.App
             _healPresenter = new HealPresenter(_visitorViews, _popups, services.Config, services.Events);
             _hud.Init(services.State, services.Events, services.Config.Strings);
             _basket.Init(services.Config, services.State, services.Events);
+            _combo.Init(services.Config, services.Events);
             _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
                 _cameraController.GetComponent<Camera>(), services.Config);
             // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
@@ -79,7 +84,7 @@ namespace RadiantOrchard.App
             services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
@@ -92,6 +97,8 @@ namespace RadiantOrchard.App
 
         private void TickVisitors() => _visitors.Tick(_services.Clock.IntervalSeconds);
 
+        private void TickBoosts() => _boosts.Tick(_services.Clock.IntervalSeconds);
+
         private void OnTimeAway(TimeAwayApplied e) => _visitors.ArriveAfterAway(e.Elapsed);
 
         private void OnDestroy()
@@ -103,6 +110,7 @@ namespace RadiantOrchard.App
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             if (_delivery != null) _services.Clock.Ticked -= _delivery.Tick;
+            if (_boosts != null) _services.Clock.Ticked -= TickBoosts;
             if (_visitors != null)
             {
                 _services.Clock.Ticked -= TickVisitors;

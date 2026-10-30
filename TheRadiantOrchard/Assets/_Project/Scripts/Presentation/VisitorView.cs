@@ -32,6 +32,9 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Color _patienceHalf = new Color(0.95f, 0.8f, 0.25f, 1f);
         [SerializeField] private Color _patienceEmpty = new Color(0.85f, 0.3f, 0.25f, 1f);
         [SerializeField] private float _sweepSeconds = 0.4f;
+        [Tooltip("The celebrate hop when healed (placeholder until the stick-figure animation).")]
+        [SerializeField] private float _hopHeight = 0.4f;
+        [SerializeField] private float _hopSeconds = 0.35f;
 
         private Vector3 _fillScale;
         private Vector3 _fillPosition;
@@ -42,6 +45,8 @@ namespace RadiantOrchard.Presentation
         // Where the backing sprite's pivot sits inside it (0..1); placeholder blocks pivot at the bottom.
         private Vector2 _lineBackPivot = new Vector2(0.5f, 0.5f);
         private Coroutine _heal;
+        private Coroutine _hop;
+        private float _hopOffset;
 
         public Vector2 PopupPoint => _popupAnchor.position;
         public Vector2 TonicPoint => _tonicAnchor.position;
@@ -107,7 +112,7 @@ namespace RadiantOrchard.Presentation
             if (bar.activeSelf != show) bar.SetActive(show);
         }
 
-        public void MoveTo(Vector2 position) => transform.position = new Vector3(position.x, position.y, 0f);
+        public void MoveTo(Vector2 position) => transform.position = new Vector3(position.x, position.y + _hopOffset, 0f);
 
         /// <summary>1 = full, 0 = run out. Shrinks the bar from the right and shifts green → yellow → red.</summary>
         public void SetPatience(float patience)
@@ -131,6 +136,20 @@ namespace RadiantOrchard.Presentation
             if (!isActiveAndEnabled) { SetBodyColour(colour); return; }
             if (_heal != null) StopCoroutine(_heal);
             _heal = StartCoroutine(Sweep(colour));
+            if (_hop != null) StopCoroutine(_hop);
+            _hop = StartCoroutine(Hop());
+        }
+
+        // A little jump for joy; the presenter's MoveTo adds the offset, so it rides along while they walk off.
+        private IEnumerator Hop()
+        {
+            for (float t = 0f; t < _hopSeconds; t += Time.deltaTime)
+            {
+                _hopOffset = Mathf.Sin(t / _hopSeconds * Mathf.PI) * _hopHeight;
+                yield return null;
+            }
+            _hopOffset = 0f;
+            _hop = null;
         }
 
         private float BarUnitWidth
@@ -158,7 +177,12 @@ namespace RadiantOrchard.Presentation
             for (int i = 0; i < _body.Length; i++) _body[i].color = colour;
         }
 
-        private void OnDisable() => _heal = null;
+        private void OnDisable()
+        {
+            _heal = null;
+            _hop = null;
+            _hopOffset = 0f;
+        }
 
         private void Awake()
         {
