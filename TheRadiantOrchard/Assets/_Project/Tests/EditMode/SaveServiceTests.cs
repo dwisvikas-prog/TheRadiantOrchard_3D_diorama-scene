@@ -136,11 +136,75 @@ namespace RadiantOrchard.Tests.EditMode
             fake.Main = JsonUtility.ToJson(future);
 
             LogAssert.Expect(LogType.Warning, new Regex("newer than this build"));
+            LogAssert.Expect(LogType.Warning, new Regex("will not save"));
             var service = NewService(fake);
             var state = service.Load(_balance);
 
             Assert.AreEqual(SaveLoadSource.New, service.LastLoadSource);
             Assert.AreEqual(0, state.Seeds);
+        }
+
+        [Test]
+        public void NewerSaveIsNeverOverwritten()
+        {
+            var fake = new FakeStore();
+            var future = GameState.CreateNew(_balance);
+            future.Version = GameState.CurrentVersion + 1;
+            future.Seeds = 999;
+            string futureJson = JsonUtility.ToJson(future);
+            fake.Main = futureJson;
+
+            LogAssert.Expect(LogType.Warning, new Regex("newer than this build"));
+            LogAssert.Expect(LogType.Warning, new Regex("will not save"));
+            var service = NewService(fake);
+            var state = service.Load(_balance);
+            Assert.IsTrue(service.WritesBlocked);
+
+            state.Seeds = 5;
+            service.MarkDirty();
+            Assert.IsFalse(service.Tick(0f), "A new game must not autosave over a newer save.");
+            Assert.IsFalse(service.Tick(10f));
+            Assert.IsFalse(service.SaveNow(), "Pause/quit must not save over a newer save either.");
+
+            Assert.AreEqual(0, fake.Writes);
+            Assert.AreEqual(futureJson, fake.Main);
+        }
+
+        [Test]
+        public void NewerMainWithOlderBackupLoadsBackupButNeverWrites()
+        {
+            var fake = new FakeStore();
+            var future = GameState.CreateNew(_balance);
+            future.Version = GameState.CurrentVersion + 1;
+            future.Seeds = 999;
+            string futureJson = JsonUtility.ToJson(future);
+            fake.Main = futureJson;
+            var older = GameState.CreateNew(_balance);
+            older.Seeds = 50;
+            fake.Backup = JsonUtility.ToJson(older);
+
+            LogAssert.Expect(LogType.Warning, new Regex("newer than this build"));
+            LogAssert.Expect(LogType.Warning, new Regex("restored from the backup"));
+            LogAssert.Expect(LogType.Warning, new Regex("will not save"));
+            var service = NewService(fake);
+            var state = service.Load(_balance);
+
+            Assert.AreEqual(SaveLoadSource.Backup, service.LastLoadSource);
+            Assert.AreEqual(50, state.Seeds);
+            Assert.IsFalse(service.Tick(0f), "Writing the backup back would push the newer save out.");
+            Assert.AreEqual(0, fake.Writes);
+            Assert.AreEqual(futureJson, fake.Main);
+        }
+
+        [Test]
+        public void CurrentVersionSaveIsWritable()
+        {
+            var fake = new FakeStore { Main = JsonUtility.ToJson(GameState.CreateNew(_balance)) };
+            var service = NewService(fake);
+            service.Load(_balance);
+
+            Assert.IsFalse(service.WritesBlocked);
+            Assert.IsTrue(service.SaveNow());
         }
 
         [Test]

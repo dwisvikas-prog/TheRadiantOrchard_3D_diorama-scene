@@ -30,11 +30,18 @@ namespace RadiantOrchard.Core
         public SaveLoadSource LastLoadSource { get; private set; }
         public bool IsDirty => _dirty;
 
+        /// <summary>
+        /// True when save.json or save.bak was written by a newer build. Nothing is written for the rest of the session,
+        /// so this older build can never replace that progress (a write would push it to save.bak, the next one erase it).
+        /// </summary>
+        public bool WritesBlocked { get; private set; }
+
         /// <summary>Loads save.json, else the backup, else starts a new game. Never throws for a bad file.</summary>
         public GameState Load(BalanceConfig balance)
         {
             if (balance == null) throw new ArgumentNullException(nameof(balance));
 
+            WritesBlocked = false;
             GameState state;
             if (TryParse(SafeRead(_store.Read), "save", out state))
             {
@@ -53,6 +60,11 @@ namespace RadiantOrchard.Core
                 state = GameState.CreateNew(balance);
                 LastLoadSource = SaveLoadSource.New;
                 _dirty = true;
+            }
+
+            if (WritesBlocked)
+            {
+                Log.Warn("SaveService: a save from a newer version of the game was found; this session will not save, so it is kept.");
             }
 
             state.EnsureIntegrity(balance);
@@ -75,7 +87,7 @@ namespace RadiantOrchard.Core
         /// <summary>Writes the state now. On failure the changes stay marked unsaved so the next attempt retries.</summary>
         public bool SaveNow()
         {
-            if (State == null) return false;
+            if (State == null || WritesBlocked) return false;
 
             try
             {
@@ -105,7 +117,7 @@ namespace RadiantOrchard.Core
             }
         }
 
-        private static bool TryParse(string json, string label, out GameState state)
+        private bool TryParse(string json, string label, out GameState state)
         {
             state = null;
             if (string.IsNullOrWhiteSpace(json)) return false;
@@ -119,6 +131,8 @@ namespace RadiantOrchard.Core
                 Log.Warn($"SaveService: the {label} file is not valid JSON ({e.Message}).");
                 return false;
             }
+
+            if (state != null && state.Version > GameState.CurrentVersion) WritesBlocked = true;
 
             if (!SaveMigrator.TryMigrate(state, out string error))
             {

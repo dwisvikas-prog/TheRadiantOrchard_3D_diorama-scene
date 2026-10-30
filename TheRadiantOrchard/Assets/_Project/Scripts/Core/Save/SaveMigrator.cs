@@ -21,7 +21,8 @@ namespace RadiantOrchard.Core
                 return false;
             }
 
-            // Refusing a newer save keeps an older app build from replacing the player's progress with a fresh game.
+            // An older build cannot read a newer save. SaveService also stops writing for that session, so the newer file
+            // is never replaced by a fresh game.
             if (state.Version > GameState.CurrentVersion)
             {
                 error = $"save version {state.Version} is newer than this build ({GameState.CurrentVersion})";
