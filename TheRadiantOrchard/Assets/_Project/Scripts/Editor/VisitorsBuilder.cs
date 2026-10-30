@@ -13,7 +13,7 @@ namespace RadiantOrchard.Editor
 {
     /// <summary>
     /// Builds the visitor pieces: the default VisitorDefinition (added to GameConfig), the pooled Visitor prefab
-    /// (placeholder body, head, thought bubble, patience bar), the VirtuePopup prefab, and the "Visitors" and
+    /// (placeholder body, head, thought bubble, patience bar, speech line), the VirtuePopup prefab, and the "Visitors" and
     /// "VirtuePopups" objects in the Game scene, wired into the GameInstaller. Replaces the W1·21 stand-in visitor.
     /// Placeholder shapes until the stick-figure art (CHAR) exists. Re-running rebuilds everything.
     /// </summary>
@@ -34,6 +34,8 @@ namespace RadiantOrchard.Editor
         // Above tonics (500) so the virtue name is never hidden by a landing tonic.
         private const int PopupOrder = 600;
         private static readonly Color BarBack = new Color(0.2f, 0.18f, 0.16f, 0.85f);
+        private static readonly Color LineBackColour = new Color(1f, 0.97f, 0.88f, 0.92f);
+        private static readonly Color LineTextColour = new Color(0.25f, 0.2f, 0.15f, 1f);
 
         [MenuItem("Radiant Orchard/Setup/Build Visitors")]
         public static void Build()
@@ -80,7 +82,7 @@ namespace RadiantOrchard.Editor
                 return;
             }
 
-            GameObject visitorSource = BuildVisitor(block, dot, diamond);
+            GameObject visitorSource = BuildVisitor(block, dot, diamond, font);
             var visitorPrefab = PrefabUtility.SaveAsPrefabAsset(visitorSource, VisitorPrefabPath).GetComponent<VisitorView>();
             Object.DestroyImmediate(visitorSource);
             GameObject popupSource = BuildPopup(font);
@@ -127,7 +129,7 @@ namespace RadiantOrchard.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static GameObject BuildVisitor(Sprite block, Sprite dot, Sprite diamond)
+        private static GameObject BuildVisitor(Sprite block, Sprite dot, Sprite diamond, TMP_FontAsset font)
         {
             var root = new GameObject("Visitor");
             // Body, head, bubble and bar sort as one object, by the visitor's feet.
@@ -149,6 +151,25 @@ namespace RadiantOrchard.Editor
             Transform popupAnchor = Child(root.transform, "PopupAnchor", new Vector3(0f, 2.3f, 0f));
             Transform tonicAnchor = Child(root.transform, "TonicAnchor", new Vector3(0f, 1.2f, 0f));
 
+            // Speech line above the bubble; the view sizes the backing to the text on each arrival.
+            SpriteRenderer lineBack = Renderer(root.transform, "LineBack", block, 6, new Vector3(0f, 3.8f, 0f), Vector3.one);
+            lineBack.color = LineBackColour;
+            lineBack.gameObject.SetActive(false);
+            var lineGo = new GameObject("Line");
+            lineGo.transform.SetParent(root.transform, false);
+            lineGo.transform.localPosition = new Vector3(0f, 3.6f, 0f);
+            var line = lineGo.AddComponent<TextMeshPro>();
+            line.font = font;
+            line.text = string.Empty;
+            line.fontSize = 3.8f;
+            line.color = LineTextColour;
+            line.alignment = TextAlignmentOptions.Bottom;
+            line.textWrappingMode = TextWrappingModes.Normal;
+            line.rectTransform.sizeDelta = new Vector2(5f, 2f);
+            line.rectTransform.pivot = new Vector2(0.5f, 0f);
+            line.sortingOrder = 7;
+            lineGo.SetActive(false);
+
             var view = root.AddComponent<VisitorView>();
             var so = new SerializedObject(view);
             SerializedProperty parts = so.FindProperty("_body");
@@ -161,6 +182,8 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_patienceFillRenderer").objectReferenceValue = fill;
             so.FindProperty("_popupAnchor").objectReferenceValue = popupAnchor;
             so.FindProperty("_tonicAnchor").objectReferenceValue = tonicAnchor;
+            so.FindProperty("_line").objectReferenceValue = line;
+            so.FindProperty("_lineBack").objectReferenceValue = lineBack;
             so.ApplyModifiedPropertiesWithoutUndo();
             return root;
         }

@@ -6,8 +6,9 @@ namespace RadiantOrchard.Gameplay
 {
     /// <summary>
     /// Visitors (CLAUDE.md 5.4): spawns one about every VisitorSpawnIntervalSeconds while playing, up to
-    /// MaxVisitorsOnPath on the path, each asking for one fruit the player has planted. They walk in and wait with
-    /// patience counting down. Nobody is turned away: when patience runs out they walk to the bench and sit, still
+    /// MaxVisitorsOnPath on the path, each asking for one fruit the player has planted and saying one of that fruit's
+    /// virtue's situation lines. They walk in and wait with patience counting down. After time away, up to
+    /// MaxOfflineArrivals are already waiting (ArriveAfterAway). Nobody is turned away: when patience runs out they walk to the bench and sit, still
     /// asking; with the bench full they wait off-screen in the jungle until a seat frees. Healed visitors leave.
     /// Pure C# on the GameClock; views follow the events and snapshots. Seated visitors are saved in GameState.Bench;
     /// path and off-screen visitors are not (offline arrivals, W2·06).
@@ -18,6 +19,7 @@ namespace RadiantOrchard.Gameplay
         {
             public int Id;
             public string FruitId;
+            public string LineKey;
             public int Spot = -1;
             public int Seat = -1;
             public VisitorPhase Phase;
@@ -141,6 +143,21 @@ namespace RadiantOrchard.Gameplay
             if (!TrySpawn()) return -1;
             _spawnTimer = 0f;
             return _nextId - 1;
+        }
+
+        /// <summary>
+        /// Time passed while the app was closed or in the background (CLAUDE.md 5.4): one visitor for every spawn interval
+        /// away, at most MaxOfflineArrivals and the free path spots, already standing at their spots with full patience.
+        /// Needs something planted. Restarts the spawn timer. Returns how many arrived.
+        /// </summary>
+        public int ArriveAfterAway(TimeSpan away)
+        {
+            double intervals = Math.Floor(away.TotalSeconds / Balance.VisitorSpawnIntervalSeconds);
+            int due = (int)Math.Min(Balance.MaxOfflineArrivals, Math.Max(0d, intervals));
+            int count = 0;
+            while (count < due && TrySpawn(alreadyWaiting: true)) count++;
+            if (count > 0) _spawnTimer = 0f;
+            return count;
         }
 
         /// <summary>Dev: everyone waiting on the path without a tonic coming runs out of patience now. Returns how many.</summary>
@@ -312,7 +329,7 @@ namespace RadiantOrchard.Gameplay
             }
         }
 
-        private bool TrySpawn()
+        private bool TrySpawn(bool alreadyWaiting = false)
         {
             int max = Math.Min(Balance.MaxVisitorsOnPath, _spotTaken.Length);
             if (PathCount >= max) return false;
@@ -322,18 +339,28 @@ namespace RadiantOrchard.Gameplay
             CollectPlantedFruits();
             if (_planted.Count == 0) return false;
 
+            string fruitId = _planted[_random.Next(_planted.Count)];
             var v = new Visitor
             {
                 Id = _nextId++,
-                FruitId = _planted[_random.Next(_planted.Count)],
+                FruitId = fruitId,
+                LineKey = PickLine(fruitId),
                 Spot = spot,
-                Phase = VisitorPhase.WalkingIn,
+                Phase = alreadyWaiting ? VisitorPhase.Waiting : VisitorPhase.WalkingIn,
             };
             _spotTaken[spot] = true;
             PathCount++;
             _visitors.Add(v);
             _events.Publish(new VisitorArrived(v.Id, v.FruitId, v.Spot));
             return true;
+        }
+
+        // One of the lines of the virtue their fruit stands for (CLAUDE.md 5.4), or null if it has none.
+        private string PickLine(string fruitId)
+        {
+            VirtueDefinition virtue = _config.FindFruit(fruitId)?.Virtue;
+            if (virtue == null || virtue.SituationLineKeys.Count == 0) return null;
+            return virtue.SituationLineKeys[_random.Next(virtue.SituationLineKeys.Count)];
         }
 
         // Only fruits the player has planted can be asked for (CLAUDE.md 5.4); each counts once however many trees.
@@ -361,7 +388,7 @@ namespace RadiantOrchard.Gameplay
                 : v.Phase == VisitorPhase.Waiting ? Math.Max(0f, 1f - v.Elapsed / Balance.PatienceSeconds)
                 : 0f;
             string definition = _config.Visitors.Count > 0 ? _config.Visitors[0].Id : null;
-            return new VisitorInfo(v.Id, definition, v.FruitId, v.Spot, v.Seat, v.Phase, v.Elapsed, patience, v.RanOut, v.Reserved);
+            return new VisitorInfo(v.Id, definition, v.FruitId, v.LineKey, v.Spot, v.Seat, v.Phase, v.Elapsed, patience, v.RanOut, v.Reserved);
         }
     }
 }

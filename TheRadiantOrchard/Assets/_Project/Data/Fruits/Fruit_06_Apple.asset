@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: apple
   _displayNameKey: fruit.apple
-  _virtueNameKey: virtue.self_control
+  _virtue: {fileID: 11400000, guid: c489f3c252582c342ae77000407e5ae4, type: 2}
   _gesture: 1
   _growSeconds: 10800
   _plantCost: 600

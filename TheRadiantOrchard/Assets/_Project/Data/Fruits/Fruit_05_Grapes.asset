@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: grapes
   _displayNameKey: fruit.grapes
-  _virtueNameKey: virtue.meekness
+  _virtue: {fileID: 11400000, guid: 2add8ce9ecfc27444a7e9648e525ad0c, type: 2}
   _gesture: 1
   _growSeconds: 7200
   _plantCost: 400

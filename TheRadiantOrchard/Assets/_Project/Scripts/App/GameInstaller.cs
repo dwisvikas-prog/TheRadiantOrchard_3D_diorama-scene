@@ -66,6 +66,9 @@ namespace RadiantOrchard.App
             _healPresenter = new HealPresenter(_visitorViews, _popups, services.Config, services.Events);
             _delivery = new HarvestDelivery(services.Events, _visitors, _visitorViews, _tonics, _farmView, services.Config);
             _hud.Init(services.State, services.Events, services.Config.Strings);
+            // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
+            _visitors.ArriveAfterAway(services.LaunchTimeAway);
+            services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors);
@@ -81,6 +84,8 @@ namespace RadiantOrchard.App
 
         private void TickVisitors() => _visitors.Tick(_services.Clock.IntervalSeconds);
 
+        private void OnTimeAway(TimeAwayApplied e) => _visitors.ArriveAfterAway(e.Elapsed);
+
         private void OnDestroy()
         {
             if (_services == null) return;
@@ -89,7 +94,11 @@ namespace RadiantOrchard.App
 #endif
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
-            if (_visitors != null) _services.Clock.Ticked -= TickVisitors;
+            if (_visitors != null)
+            {
+                _services.Clock.Ticked -= TickVisitors;
+                _services.Events.Unsubscribe<TimeAwayApplied>(OnTimeAway);
+            }
             _plotsPresenter?.Dispose();
             _pointer?.Dispose();
             _healPresenter?.Dispose();

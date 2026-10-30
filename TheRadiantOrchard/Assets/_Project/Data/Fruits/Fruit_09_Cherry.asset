@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: cherry
   _displayNameKey: fruit.cherry
-  _virtueNameKey: virtue.faithfulness
+  _virtue: {fileID: 11400000, guid: b05f2844ccbff3e43bfccb6bffbf19a5, type: 2}
   _gesture: 2
   _growSeconds: 28800
   _plantCost: 1800

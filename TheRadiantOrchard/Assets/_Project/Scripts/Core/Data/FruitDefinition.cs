@@ -15,8 +15,8 @@ namespace RadiantOrchard.Core
         [SerializeField] private string _id;
         [Tooltip("StringTable key for the fruit's display name.")]
         [SerializeField] private string _displayNameKey;
-        [Tooltip("StringTable key for the virtue this fruit represents.")]
-        [SerializeField] private string _virtueNameKey;
+        [Tooltip("The virtue this fruit represents (name and situation lines).")]
+        [SerializeField] private VirtueDefinition _virtue;
 
         [Header("Harvest")]
         [SerializeField] private GestureType _gesture;
@@ -40,7 +40,8 @@ namespace RadiantOrchard.Core
 
         public string Id => _id;
         public string DisplayNameKey => _displayNameKey;
-        public string VirtueNameKey => _virtueNameKey;
+        public VirtueDefinition Virtue => _virtue;
+        public string VirtueNameKey => _virtue != null ? _virtue.NameKey : null;
         public GestureType Gesture => _gesture;
         public int GrowSeconds => _growSeconds;
         public TimeSpan GrowTime => TimeSpan.FromSeconds(_growSeconds);
@@ -61,6 +62,9 @@ namespace RadiantOrchard.Core
                 Debug.LogWarning($"FruitDefinition '{name}' has no id; it cannot be saved or loaded.", this);
                 return;
             }
+
+            if (_virtue == null)
+                Debug.LogWarning($"FruitDefinition '{name}' has no virtue; run Radiant Orchard > Setup > Build Virtues.", this);
 
             string clean = _id.Trim().ToLowerInvariant();
             if (clean != _id)

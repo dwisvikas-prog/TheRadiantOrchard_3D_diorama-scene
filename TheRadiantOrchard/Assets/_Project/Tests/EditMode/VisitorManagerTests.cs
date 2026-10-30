@@ -399,5 +399,83 @@ namespace RadiantOrchard.Tests.EditMode
             Assert.AreEqual(0, _state.Seeds);
             Assert.AreEqual(0, _state.HealedTotal);
         }
+
+        [Test]
+        public void AfterTimeAwayUpToThreeVisitorsAreAlreadyWaiting()
+        {
+            Plant(0, "strawberry");
+            Assert.AreEqual(3, _visitors.ArriveAfterAway(TimeSpan.FromMinutes(10)));
+            Assert.AreEqual(3, _visitors.PathCount);
+            for (int i = 0; i < 3; i++)
+            {
+                VisitorInfo info = _visitors.GetAt(i);
+                Assert.AreEqual(VisitorPhase.Waiting, info.Phase, "Already at their spot, no walk in.");
+                Assert.AreEqual(i, info.Spot);
+                Assert.AreEqual(1f, info.Patience, 1e-4f, "Full patience.");
+            }
+            Assert.AreEqual(_visitors.GetAt(0).Id, _visitors.Reserve("strawberry"), "They can be served straight away.");
+        }
+
+        [Test]
+        public void OneVisitorPerSpawnIntervalAwayAndNoneForAShortBreak()
+        {
+            Plant(0, "strawberry");
+            Assert.AreEqual(0, _visitors.ArriveAfterAway(TimeSpan.FromSeconds(_b.VisitorSpawnIntervalSeconds - 1f)));
+            Assert.AreEqual(0, _visitors.ArriveAfterAway(TimeSpan.Zero));
+            Assert.AreEqual(2, _visitors.ArriveAfterAway(TimeSpan.FromSeconds(_b.VisitorSpawnIntervalSeconds * 2.5f)));
+            Assert.AreEqual(1, _visitors.ArriveAfterAway(TimeSpan.FromDays(3)), "Only the free spot is filled.");
+            Assert.AreEqual(0, _visitors.ArriveAfterAway(TimeSpan.FromDays(3)), "The path is full.");
+            Assert.AreEqual(_b.MaxOfflineArrivals, 3, "CLAUDE.md 5.4: up to 3.");
+        }
+
+        [Test]
+        public void NobodyArrivesAfterTimeAwayWithNothingPlanted()
+        {
+            Assert.AreEqual(0, _visitors.ArriveAfterAway(TimeSpan.FromHours(5)));
+            Assert.AreEqual(0, _visitors.Count);
+        }
+
+        [Test]
+        public void OfflineArrivalsRestartTheSpawnTimer()
+        {
+            Plant(0, "strawberry");
+            Assert.AreEqual(2, _visitors.ArriveAfterAway(TimeSpan.FromSeconds(_b.VisitorSpawnIntervalSeconds * 2)));
+            // A new game would bring its first visitor on the first tick; after offline arrivals the next waits.
+            Run(_b.VisitorSpawnIntervalSeconds - 1f);
+            Assert.AreEqual(2, _arrived.Count, "No regular visitor right after the offline ones.");
+            Run(2f);
+            Assert.AreEqual(3, _arrived.Count, "The third spot fills after a full interval.");
+        }
+
+        [Test]
+        public void EachVisitorSaysALineOfTheirFruitsVirtue()
+        {
+            foreach (FruitDefinition fruit in _config.Fruits)
+            {
+                SetUp();
+                Plant(0, fruit.Id);
+                var said = new HashSet<string>();
+                for (int round = 0; round < 30; round++)
+                {
+                    int id = _visitors.SpawnNow();
+                    VisitorInfo info = Get(id);
+                    StringAssert.StartsWith($"situation.{fruit.Virtue.Id}.", info.LineKey, fruit.Id);
+                    CollectionAssert.Contains(fruit.Virtue.SituationLineKeys, info.LineKey);
+                    said.Add(info.LineKey);
+                    Run(_b.VisitorWalkInSeconds);
+                    _visitors.Deliver(id, fruit.Id);
+                    Run(_b.VisitorWalkOutSeconds);
+                }
+                Assert.AreEqual(3, said.Count, $"All three {fruit.Virtue.Id} lines are used.");
+            }
+        }
+
+        [Test]
+        public void VisitorsBackFromTheBenchSaveSayNothing()
+        {
+            _state.Bench.Add(new BenchVisitorState("strawberry", 100));
+            _visitors = NewManager();
+            Assert.IsNull(_visitors.GetAt(0).LineKey, "They spoke when they first arrived.");
+        }
     }
 }

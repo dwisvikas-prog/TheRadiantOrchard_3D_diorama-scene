@@ -1,5 +1,6 @@
 using System.Collections;
 using RadiantOrchard.Core;
+using TMPro;
 using UnityEngine;
 
 namespace RadiantOrchard.Presentation
@@ -7,7 +8,8 @@ namespace RadiantOrchard.Presentation
     /// <summary>
     /// One pooled visitor figure (CLAUDE.md 5.4): grey body and head, a thought bubble with the requested fruit and a
     /// patience bar that runs green to red (hidden on the bench, where nobody waits against a clock). Healing turns
-    /// them to the fruit's colour and they walk off coloured.
+    /// them to the fruit's colour and they walk off coloured. On arrival a short speech line (their virtue's situation)
+    /// shows above them for a few seconds.
     /// Placeholder shapes until the stick-figure art (CHAR) exists. Moved by VisitorsPresenter; no Update of its own.
     /// </summary>
     public sealed class VisitorView : MonoBehaviour
@@ -19,6 +21,10 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private SpriteRenderer _patienceFillRenderer;
         [SerializeField] private Transform _popupAnchor;
         [SerializeField] private Transform _tonicAnchor;
+        [SerializeField] private TextMeshPro _line;
+        [Tooltip("Backing behind the speech line, sized to the text when it is shown.")]
+        [SerializeField] private SpriteRenderer _lineBack;
+        [SerializeField] private Vector2 _linePadding = new Vector2(0.4f, 0.25f);
 
         [Header("Look (placeholder)")]
         [SerializeField] private Color _grey = new Color(0.62f, 0.62f, 0.6f, 1f);
@@ -30,6 +36,11 @@ namespace RadiantOrchard.Presentation
         private Vector3 _fillScale;
         private Vector3 _fillPosition;
         private float _shownPatience = -1f;
+        private float _shownLineAlpha = -1f;
+        private Color _lineBackColour;
+        private Vector2 _lineBackUnitSize = Vector2.one;
+        // Where the backing sprite's pivot sits inside it (0..1); placeholder blocks pivot at the bottom.
+        private Vector2 _lineBackPivot = new Vector2(0.5f, 0.5f);
         private Coroutine _heal;
 
         public Vector2 PopupPoint => _popupAnchor.position;
@@ -51,7 +62,43 @@ namespace RadiantOrchard.Presentation
             else _bubbleFruit.color = fruit != null ? fruit.Tint : Color.white;
             _shownPatience = -1f;
             SetPatience(1f);
+            HideLine();
         }
+
+        /// <summary>Shows what they say, the backing fitted to the text. Called once per arrival, never per frame.</summary>
+        public void ShowLine(string text)
+        {
+            // Active first: an inactive text has no mesh to measure.
+            _line.gameObject.SetActive(true);
+            _lineBack.gameObject.SetActive(true);
+            _line.text = text;
+            _line.ForceMeshUpdate();
+            Vector2 size = (Vector2)_line.textBounds.size + _linePadding;
+            _lineBack.transform.localScale = new Vector3(size.x / _lineBackUnitSize.x, size.y / _lineBackUnitSize.y, 1f);
+            Vector2 centre = (Vector2)_line.transform.localPosition + (Vector2)_line.textBounds.center;
+            _lineBack.transform.localPosition = centre + Vector2.Scale(_lineBackPivot - new Vector2(0.5f, 0.5f), size);
+            _shownLineAlpha = -1f;
+            SetLineAlpha(1f);
+        }
+
+        /// <summary>1 = fully shown, 0 = gone (fading out).</summary>
+        public void SetLineAlpha(float alpha)
+        {
+            alpha = Mathf.Clamp01(alpha);
+            if (Mathf.Abs(alpha - _shownLineAlpha) < 0.01f) return;
+            _shownLineAlpha = alpha;
+            _line.alpha = alpha;
+            _lineBack.color = new Color(_lineBackColour.r, _lineBackColour.g, _lineBackColour.b, _lineBackColour.a * alpha);
+        }
+
+        public void HideLine()
+        {
+            if (_line.gameObject.activeSelf) _line.gameObject.SetActive(false);
+            if (_lineBack.gameObject.activeSelf) _lineBack.gameObject.SetActive(false);
+        }
+
+        public bool LineShown => _line.gameObject.activeSelf;
+        public string LineText => _line.text;
 
         /// <summary>The patience bar is shown on the path and hidden once their patience has run out.</summary>
         public void ShowPatienceBar(bool show)
@@ -78,6 +125,7 @@ namespace RadiantOrchard.Presentation
         /// <summary>Grey to colour (the colour sweep shader replaces this tint in W3); stays coloured while leaving.</summary>
         public void PlayHeal(Color colour)
         {
+            HideLine();
             _bubble.SetActive(false);
             _patienceFill.parent.gameObject.SetActive(false);
             if (!isActiveAndEnabled) { SetBodyColour(colour); return; }
@@ -115,13 +163,20 @@ namespace RadiantOrchard.Presentation
         private void Awake()
         {
             if (_body.Length == 0 || _bubble == null || _bubbleFruit == null || _patienceFill == null || _patienceFillRenderer == null
-                || _popupAnchor == null || _tonicAnchor == null)
+                || _popupAnchor == null || _tonicAnchor == null || _line == null || _lineBack == null)
             {
                 Log.Error($"VisitorView '{name}': a reference is missing; rebuild it (Radiant Orchard > Setup > Build Visitors).", this);
                 return;
             }
             _fillScale = _patienceFill.localScale;
             _fillPosition = _patienceFill.localPosition;
+            _lineBackColour = _lineBack.color;
+            Sprite back = _lineBack.sprite;
+            if (back != null)
+            {
+                _lineBackUnitSize = back.rect.size / back.pixelsPerUnit;
+                _lineBackPivot = new Vector2(back.pivot.x / back.rect.width, back.pivot.y / back.rect.height);
+            }
         }
     }
 }

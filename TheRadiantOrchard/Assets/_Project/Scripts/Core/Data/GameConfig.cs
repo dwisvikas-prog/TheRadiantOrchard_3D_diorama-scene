@@ -15,6 +15,8 @@ namespace RadiantOrchard.Core
         [SerializeField] private FarmDefinition _farm;
         [Tooltip("All fruits, in the order the plant menu shows them.")]
         [SerializeField] private FruitDefinition[] _fruits = new FruitDefinition[0];
+        [Tooltip("The nine virtues, in the order of CLAUDE.md section 4. Each fruit links to its own.")]
+        [SerializeField] private VirtueDefinition[] _virtues = new VirtueDefinition[0];
         [Tooltip("Visitor kinds. Phase 1 has one; Phase 2 adds special visitors.")]
         [SerializeField] private VisitorDefinition[] _visitors = new VisitorDefinition[0];
 
@@ -22,6 +24,7 @@ namespace RadiantOrchard.Core
         public StringTable Strings => _strings;
         public FarmDefinition Farm => _farm;
         public IReadOnlyList<FruitDefinition> Fruits => _fruits;
+        public IReadOnlyList<VirtueDefinition> Virtues => _virtues;
         public IReadOnlyList<VisitorDefinition> Visitors => _visitors;
 
         /// <summary>Fruit with the given save-file id, or null if none.</summary>

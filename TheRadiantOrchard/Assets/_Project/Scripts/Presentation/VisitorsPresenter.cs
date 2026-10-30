@@ -24,6 +24,8 @@ namespace RadiantOrchard.Presentation
             public float Elapsed;
             // Where the current walk started.
             public Vector2 From;
+            // Seconds the speech line has been up; negative when none is showing.
+            public float LineAge;
         }
 
         [SerializeField] private VisitorView _prefab;
@@ -32,6 +34,9 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private float _spotTargetHeight = 1.2f;
         [Tooltip("Distance between bench seats along the bench (world units); seats are centred on the bench.")]
         [SerializeField] private float _seatSpacing = 0.8f;
+        [Tooltip("Seconds the arrival line stays up (from leaving the jungle), the last part fading.")]
+        [Min(0.5f)] [SerializeField] private float _lineSeconds = 8f;
+        [Min(0.05f)] [SerializeField] private float _lineFadeSeconds = 0.5f;
 
         private readonly List<Shown> _shown = new List<Shown>(8);
         private ObjectPool<VisitorView> _pool;
@@ -80,10 +85,19 @@ namespace RadiantOrchard.Presentation
 
         private void OnArrived(VisitorArrived e)
         {
+            if (!_visitors.TryGet(e.VisitorId, out VisitorInfo info)) return;
             VisitorView view = _pool.Get();
             view.Show(_config.FindFruit(e.FruitId));
-            view.MoveTo(_farm.SpawnPoint.position);
-            _shown.Add(new Shown { Id = e.VisitorId, Spot = e.Spot, View = view, Phase = VisitorPhase.WalkingIn, From = _farm.SpawnPoint.position });
+            // Visitors who came while the app was closed are already standing at their spot.
+            Vector2 at = info.Phase == VisitorPhase.WalkingIn ? (Vector2)_farm.SpawnPoint.position : (Vector2)_farm.WaitingSpots[e.Spot].position;
+            view.MoveTo(at);
+            float lineAge = -1f;
+            if (!string.IsNullOrEmpty(info.LineKey))
+            {
+                view.ShowLine(_config.Strings.Get(info.LineKey));
+                lineAge = 0f;
+            }
+            _shown.Add(new Shown { Id = e.VisitorId, Spot = e.Spot, View = view, Phase = info.Phase, From = at, LineAge = lineAge });
         }
 
         private void ShowExisting(VisitorInfo info)
@@ -94,7 +108,7 @@ namespace RadiantOrchard.Presentation
             Vector2 at = info.Seat >= 0 ? SeatPosition(info.Seat) : (Vector2)_farm.SpawnPoint.position;
             view.MoveTo(at);
             view.gameObject.SetActive(info.Phase != VisitorPhase.Offscreen);
-            _shown.Add(new Shown { Id = info.Id, Spot = info.Spot, View = view, Phase = info.Phase, Elapsed = info.PhaseElapsed, From = at });
+            _shown.Add(new Shown { Id = info.Id, Spot = info.Spot, View = view, Phase = info.Phase, Elapsed = info.PhaseElapsed, From = at, LineAge = -1f });
         }
 
         private void OnLeft(VisitorLeft e)
@@ -125,10 +139,27 @@ namespace RadiantOrchard.Presentation
                     s.Elapsed = info.PhaseElapsed;
                     s.From = s.View.transform.position;
                     if (info.PatienceRanOut) s.View.ShowPatienceBar(false);
+                    // The line belongs to arriving; it goes once they move on (healed, or off to the bench).
+                    if (s.Phase != VisitorPhase.WalkingIn && s.Phase != VisitorPhase.Waiting && s.LineAge >= 0f)
+                    {
+                        s.View.HideLine();
+                        s.LineAge = -1f;
+                    }
                     bool visible = s.Phase != VisitorPhase.Offscreen;
                     if (s.View.gameObject.activeSelf != visible) s.View.gameObject.SetActive(visible);
                 }
                 else s.Elapsed += dt;
+
+                if (s.LineAge >= 0f)
+                {
+                    s.LineAge += dt;
+                    if (s.LineAge >= _lineSeconds)
+                    {
+                        s.View.HideLine();
+                        s.LineAge = -1f;
+                    }
+                    else s.View.SetLineAlpha((_lineSeconds - s.LineAge) / _lineFadeSeconds);
+                }
 
                 switch (s.Phase)
                 {

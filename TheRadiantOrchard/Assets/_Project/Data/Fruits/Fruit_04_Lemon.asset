@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: lemon
   _displayNameKey: fruit.lemon
-  _virtueNameKey: virtue.patience
+  _virtue: {fileID: 11400000, guid: fb36d622f4c562d42bb21ea0d583e6a8, type: 2}
   _gesture: 1
   _growSeconds: 3600
   _plantCost: 250

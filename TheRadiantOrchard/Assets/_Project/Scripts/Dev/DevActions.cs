@@ -74,6 +74,14 @@ namespace RadiantOrchard.Dev
             return id >= 0 ? $"Visitor {id} is on the way." : "No room on the path, or nothing planted yet.";
         }
 
+        /// <summary>As if the app had been closed for this long: visitors who came meanwhile are already waiting.</summary>
+        public static string ArriveAfterAway(DevGame game, TimeSpan away)
+        {
+            if (game == null) return NotRunning;
+            int count = game.Visitors.ArriveAfterAway(away);
+            return count > 0 ? $"{count} visitor(s) were waiting." : "Nobody came: no free spot, or nothing planted.";
+        }
+
         /// <summary>Everyone waiting on the path runs out of patience now and heads for the bench (or the jungle if it is full).</summary>
         public static string RunOutPatience(DevGame game)
         {

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: strawberry
   _displayNameKey: fruit.strawberry
-  _virtueNameKey: virtue.love
+  _virtue: {fileID: 11400000, guid: 13d3534fa2ed37646b6b5370b4b472bf, type: 2}
   _gesture: 0
   _growSeconds: 300
   _plantCost: 0

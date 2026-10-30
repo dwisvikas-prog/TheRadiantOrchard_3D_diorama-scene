@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: pineapple
   _displayNameKey: fruit.pineapple
-  _virtueNameKey: virtue.joy
+  _virtue: {fileID: 11400000, guid: f0941c8fbae91924ab736f887e863034, type: 2}
   _gesture: 0
   _growSeconds: 900
   _plantCost: 50

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: watermelon
   _displayNameKey: fruit.watermelon
-  _virtueNameKey: virtue.peace
+  _virtue: {fileID: 11400000, guid: 45b36f09b4c054a46a1a94b5632b27ee, type: 2}
   _gesture: 0
   _growSeconds: 1800
   _plantCost: 120

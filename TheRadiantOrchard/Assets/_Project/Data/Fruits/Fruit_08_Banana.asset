@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FruitDefinition
   _id: banana
   _displayNameKey: fruit.banana
-  _virtueNameKey: virtue.goodness
+  _virtue: {fileID: 11400000, guid: 00c15cccd53c9c340afe94bef1b58770, type: 2}
   _gesture: 2
   _growSeconds: 21600
   _plantCost: 1300
