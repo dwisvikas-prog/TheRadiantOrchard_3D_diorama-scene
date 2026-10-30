@@ -15,6 +15,8 @@
 /TheRadiantOrchard/[Uu]ser[Ss]ettings/
 /TheRadiantOrchard/[Mm]emoryCaptures/
 /TheRadiantOrchard/[Rr]ecordings/
+# Temporary build tooling folder written by Android player builds
+/TheRadiantOrchard/.utmp/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/TheRadiantOrchard/[Aa]ssets/**/*.meta

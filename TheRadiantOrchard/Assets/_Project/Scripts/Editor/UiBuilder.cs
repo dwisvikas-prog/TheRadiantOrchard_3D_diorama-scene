@@ -112,7 +112,11 @@ namespace RadiantOrchard.Editor
             var backdropButton = backdrop.gameObject.AddComponent<Button>();
             backdropButton.transition = Selectable.Transition.None;
 
-            var panel = Rect("Panel", root);
+            // The panel sits in the safe area; the backdrop above still dims the whole screen.
+            var safe = Rect("Safe", root);
+            Stretch(safe);
+            safe.gameObject.AddComponent<SafeArea>();
+            var panel = Rect("Panel", safe);
             Centre(panel, new Vector2(1180f, 720f), Vector2.zero);
             panel.gameObject.AddComponent<Image>().color = Cream;
 
@@ -158,6 +162,7 @@ namespace RadiantOrchard.Editor
         {
             var hudRt = Rect("Hud", canvas);
             Stretch(hudRt);
+            hudRt.gameObject.AddComponent<SafeArea>();
 
             var pill = Rect("SeedsPill", hudRt);
             Anchor(pill, new Vector2(0f, 1f), new Vector2(320f, 80f), new Vector2(200f, -70f));
