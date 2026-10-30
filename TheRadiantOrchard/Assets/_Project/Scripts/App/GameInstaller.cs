@@ -20,11 +20,16 @@ namespace RadiantOrchard.App
         [SerializeField] private GestureRecognizer _gestures;
         [SerializeField] private PlantMenuView _plantMenu;
         [SerializeField] private TonicFlights _tonics;
+        [SerializeField] private PlaceholderVisitor _visitor;
+        [SerializeField] private VirtuePopups _popups;
+        [SerializeField] private HudView _hud;
 
         private AppServices _services;
         private PlotManager _plots;
         private PlotsPresenter _plotsPresenter;
         private FarmPointerHandler _pointer;
+        private HealService _heal;
+        private HealPresenter _healPresenter;
 
         private void Awake()
         {
@@ -36,9 +41,10 @@ namespace RadiantOrchard.App
                 return;
             }
 
-            if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null)
+            if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
+                || _visitor == null || _popups == null || _hud == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu and Tonics must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor, Popups and HUD must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -51,7 +57,13 @@ namespace RadiantOrchard.App
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
+            _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty);
+            _visitor.Init(services.Config);
+            _healPresenter = new HealPresenter(_visitor, _popups, services.Config, services.Events);
+            _tonics.Target = _visitor.transform;
             _tonics.Init(services.Events, services.Config, _farmView);
+            _tonics.Arrived += OnTonicArrived;
+            _hud.Init(services.State, services.Events, services.Config.Strings);
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
@@ -59,6 +71,12 @@ namespace RadiantOrchard.App
                 _plots, _plantMenu, services.Config.Balance.SwipeSampleSpacing);
 
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
+        }
+
+        // Until the Week 2 basket (CLAUDE.md 5.5), a tonic the visitor did not ask for just pops at the spot.
+        private void OnTonicArrived(string fruitId, Vector2 point)
+        {
+            if (HealRules.Accepts(_visitor.RequestedFruitId, fruitId)) _heal.Heal(fruitId);
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -73,6 +91,8 @@ namespace RadiantOrchard.App
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             _plotsPresenter?.Dispose();
             _pointer?.Dispose();
+            _healPresenter?.Dispose();
+            if (_tonics != null) _tonics.Arrived -= OnTonicArrived;
         }
     }
 }

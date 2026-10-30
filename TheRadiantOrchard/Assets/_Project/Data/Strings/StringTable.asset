@@ -147,3 +147,5 @@ MonoBehaviour:
     _text: '{0}:{1:00}'
   - _key: ui.timer.hours
     _text: '{0}h {1:00}m'
+  - _key: ui.hud.seeds
+    _text: 'Seeds: {0}'

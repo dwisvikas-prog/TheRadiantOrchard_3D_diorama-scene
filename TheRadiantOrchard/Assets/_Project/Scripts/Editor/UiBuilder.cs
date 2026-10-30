@@ -79,6 +79,9 @@ namespace RadiantOrchard.Editor
             Object.DestroyImmediate(menuSource);
             var menu = (GameObject)PrefabUtility.InstantiatePrefab(prefab, canvasGo.transform);
             Stretch(menu.GetComponent<RectTransform>());
+            // The HUD sits under the menu in the hierarchy so the menu's backdrop covers it while open.
+            HudView hud = BuildHud(canvasGo.transform, bold);
+            hud.transform.SetAsFirstSibling();
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -88,11 +91,12 @@ namespace RadiantOrchard.Editor
             var so = new SerializedObject(installer);
             so.FindProperty("_gestures").objectReferenceValue = gestures;
             so.FindProperty("_plantMenu").objectReferenceValue = menu.GetComponent<PlantMenuView>();
+            so.FindProperty("_hud").objectReferenceValue = hud;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas and PlantMenu prefab built; GestureRecognizer and PlantMenu wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD and PlantMenu prefab built; GestureRecognizer, PlantMenu and HUD wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -147,6 +151,27 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_optionTemplate").objectReferenceValue = template;
             so.ApplyModifiedPropertiesWithoutUndo();
             return menu;
+        }
+
+        // Seed counter pill in the top-left corner. Text comes from the StringTable at runtime.
+        private static HudView BuildHud(Transform canvas, TMP_FontAsset bold)
+        {
+            var hudRt = Rect("Hud", canvas);
+            Stretch(hudRt);
+
+            var pill = Rect("SeedsPill", hudRt);
+            Anchor(pill, new Vector2(0f, 1f), new Vector2(320f, 80f), new Vector2(200f, -70f));
+            var pillImage = pill.gameObject.AddComponent<Image>();
+            pillImage.color = Cream;
+            pillImage.raycastTarget = false;
+            TMP_Text seeds = Text("Seeds", pill, 38f, Ink, bold);
+            Stretch(seeds.rectTransform);
+
+            var hud = hudRt.gameObject.AddComponent<HudView>();
+            var so = new SerializedObject(hud);
+            so.FindProperty("_seeds").objectReferenceValue = seeds;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return hud;
         }
 
         private static FruitOptionView BuildOption(Transform parent, TMP_FontAsset bold)
