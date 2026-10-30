@@ -5,6 +5,7 @@
         "RadiantOrchard.Core",
         "RadiantOrchard.Gameplay",
         "RadiantOrchard.Input",
+        "RadiantOrchard.Presentation",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

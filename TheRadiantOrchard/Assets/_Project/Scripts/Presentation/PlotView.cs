@@ -37,6 +37,9 @@ namespace RadiantOrchard.Presentation
 
         public int Index => _index;
 
+        /// <summary>Where this plot's fruit hangs: the tonic takes off from here.</summary>
+        public Vector2 FruitPosition => _fruit.transform.position;
+
         public void Bind(int index, PlotManager plots)
         {
             _index = index;

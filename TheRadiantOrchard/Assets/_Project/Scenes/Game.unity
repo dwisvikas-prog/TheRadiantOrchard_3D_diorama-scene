@@ -1350,6 +1350,7 @@ MonoBehaviour:
   _cameraController: {fileID: 519420033}
   _gestures: {fileID: 519420034}
   _plantMenu: {fileID: 617766294}
+  _tonics: {fileID: 1867321976}
 --- !u!4 &325646123
 Transform:
   m_ObjectHideFlags: 0
@@ -11089,6 +11090,58 @@ Transform:
   - {fileID: 1192259853}
   m_Father: {fileID: 771019100}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1867321975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1867321977}
+  - component: {fileID: 1867321976}
+  m_Layer: 0
+  m_Name: Tonics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1867321976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1867321975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 541772bd001ba63469db3694070e75a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RadiantOrchard.Presentation::RadiantOrchard.Presentation.TonicFlights
+  _prefab: {fileID: 1420076259163251127, guid: a2eb4c1ff51e05544b14aa4dd50a06bf, type: 3}
+  _flightSeconds: 0.8
+  _arcHeight: 2
+  _sidewaysNudge: 0.5
+  _popSeconds: 0.15
+  _popScale: 1.6
+  _targetOffset: {x: 0, y: 1.2}
+  _prewarm: 4
+--- !u!4 &1867321977
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1867321975}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1897507202
 GameObject:
   m_ObjectHideFlags: 0
@@ -14962,3 +15015,4 @@ SceneRoots:
   - {fileID: 277213923}
   - {fileID: 691774175}
   - {fileID: 1369521270}
+  - {fileID: 1867321977}

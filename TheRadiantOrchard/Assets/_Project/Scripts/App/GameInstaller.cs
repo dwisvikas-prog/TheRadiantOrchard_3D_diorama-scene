@@ -19,6 +19,7 @@ namespace RadiantOrchard.App
         [SerializeField] private CameraController _cameraController;
         [SerializeField] private GestureRecognizer _gestures;
         [SerializeField] private PlantMenuView _plantMenu;
+        [SerializeField] private TonicFlights _tonics;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -35,9 +36,9 @@ namespace RadiantOrchard.App
                 return;
             }
 
-            if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null)
+            if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures and Plant Menu must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu and Tonics must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -50,6 +51,7 @@ namespace RadiantOrchard.App
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
+            _tonics.Init(services.Events, services.Config, _farmView);
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
