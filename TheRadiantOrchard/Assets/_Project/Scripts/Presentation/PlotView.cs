@@ -1,11 +1,12 @@
 using RadiantOrchard.Core;
 using RadiantOrchard.Gameplay;
+using TMPro;
 using UnityEngine;
 
 namespace RadiantOrchard.Presentation
 {
     /// <summary>
-    /// Shows one plot: soil, tree and fruit. Uses the fruit's own stage sprites when the art exists; until then a
+    /// Shows one plot: soil, tree, fruit and the growth countdown. Uses the fruit's own stage sprites when the art exists; until then a
     /// tinted placeholder block sized per stage. Never changes game state itself; it only calls PlotManager.
     /// </summary>
     public sealed class PlotView : MonoBehaviour
@@ -13,6 +14,8 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private SpriteRenderer _soil;
         [SerializeField] private SpriteRenderer _tree;
         [SerializeField] private SpriteRenderer _fruit;
+        [SerializeField] private GameObject _timer;
+        [SerializeField] private TMP_Text _timerText;
 
         [Header("Placeholder look (until tree art exists)")]
         [SerializeField] private Color _lockedTint = new Color(0.55f, 0.55f, 0.55f, 1f);
@@ -37,6 +40,7 @@ namespace RadiantOrchard.Presentation
         public void Show(PlotInfo info, FruitDefinition fruit)
         {
             _soil.color = info.Unlocked ? Color.white : _lockedTint;
+            _timer.SetActive(info.IsGrowing);
 
             if (info.IsEmpty || fruit == null)
             {
@@ -67,6 +71,9 @@ namespace RadiantOrchard.Presentation
             _fruit.color = fruit.Tint;
         }
 
+        /// <summary>Sets the countdown text; the presenter calls this only when the shown second changes.</summary>
+        public void SetTimerText(string text) => _timerText.text = text;
+
         private static void SizeTo(SpriteRenderer renderer, Vector2 worldSize)
         {
             Sprite s = renderer.sprite;
@@ -77,8 +84,8 @@ namespace RadiantOrchard.Presentation
 
         private void Awake()
         {
-            if (_soil == null || _tree == null || _fruit == null)
-                Log.Error($"PlotView '{name}': Soil, Tree and Fruit renderers must be assigned; rebuild the farm.", this);
+            if (_soil == null || _tree == null || _fruit == null || _timer == null || _timerText == null)
+                Log.Error($"PlotView '{name}': Soil, Tree, Fruit and Timer must be assigned; rebuild the farm.", this);
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

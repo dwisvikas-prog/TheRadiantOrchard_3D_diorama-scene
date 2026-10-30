@@ -22,5 +22,8 @@ namespace RadiantOrchard.Gameplay
 
         public bool IsEmpty => Stage == TreeStage.Empty;
         public bool IsRipe => Stage == TreeStage.Ripe;
+
+        /// <summary>Planted but not ripe yet (sapling or growing): the plot shows a countdown (CLAUDE.md 5.3).</summary>
+        public bool IsGrowing => Stage == TreeStage.Sapling || Stage == TreeStage.Growing;
     }
 }

@@ -143,3 +143,7 @@ MonoBehaviour:
     _text: 'Unlocks at stage {0}'
   - _key: ui.close
     _text: Close
+  - _key: ui.timer.minutes
+    _text: '{0}:{1:00}'
+  - _key: ui.timer.hours
+    _text: '{0}h {1:00}m'

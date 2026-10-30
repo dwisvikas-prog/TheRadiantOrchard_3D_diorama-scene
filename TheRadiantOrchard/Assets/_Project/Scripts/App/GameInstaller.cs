@@ -49,6 +49,7 @@ namespace RadiantOrchard.App
             _plots.ApplyStageUnlocks();
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
+            services.Clock.Ticked += _plotsPresenter.Tick;
 
             _tapDetector.Init(services.Config.Balance);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
@@ -61,6 +62,7 @@ namespace RadiantOrchard.App
         {
             if (_services == null) return;
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
+            if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             _plotsPresenter?.Dispose();
             _plotTaps?.Dispose();
         }

@@ -2,6 +2,7 @@ using System.IO;
 using RadiantOrchard.App;
 using RadiantOrchard.Core;
 using RadiantOrchard.Presentation;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace RadiantOrchard.Editor
         private const string FarmAssetPath = FarmFolder + "/FarmDefinition.asset";
         private const string PlaceholderFolder = "Assets/_Project/Art/Sprites/Placeholders";
         private const string PlotSpritePath = "Assets/_Project/Art/Sprites/Plots/plot_empty.png";
+        private const string TimerFontPath = "Assets/_Project/Art/Fonts/Fredoka-Bold SDF.asset";
         private const string Renderer2DPath = "Assets/_Project/Settings/Renderer2D.asset";
         private const string RootName = "FarmGrid";
 
@@ -37,6 +39,8 @@ namespace RadiantOrchard.Editor
         };
         private static readonly Color PathColour = Hex("#B8A88E");
         private static readonly Color LockedPlotTint = new Color(0.55f, 0.55f, 0.55f, 1f);
+        private static readonly Color TimerBackground = Hex("#FFF6E3");
+        private static readonly Color TimerInk = Hex("#3B2A1E");
 
         [MenuItem("Radiant Orchard/Setup/Build Placeholder Farm")]
         public static void Build()
@@ -65,9 +69,10 @@ namespace RadiantOrchard.Editor
             tileSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderFolder + "/ph_tile.png");
             blockSprite = AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderFolder + "/ph_block.png");
             groundTile = AssetDatabase.LoadAssetAtPath<Tile>(PlaceholderFolder + "/ph_ground_tile.asset");
-            if (config == null || config.Balance == null || plotSprite == null)
+            var timerFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TimerFontPath);
+            if (config == null || config.Balance == null || plotSprite == null || timerFont == null)
             {
-                Debug.LogError("FarmLayoutBuilder: GameConfig (with Balance) or plot_empty sprite is missing.");
+                Debug.LogError("FarmLayoutBuilder: GameConfig (with Balance), the plot_empty sprite or the Fredoka-Bold SDF font is missing.");
                 return;
             }
             FarmDefinition farm = EnsureFarmDefinition(config);
@@ -83,7 +88,7 @@ namespace RadiantOrchard.Editor
 
             Tilemap[] zones = BuildZones(rootGo.transform, farm, groundTile);
             BuildPath(rootGo.transform, farm, groundTile);
-            PlotView[] plots = BuildPlots(rootGo.transform, grid, farm, plotSprite, blockSprite, tileSprite, config.Balance.PlotsOpenAt(0));
+            PlotView[] plots = BuildPlots(rootGo.transform, grid, farm, plotSprite, blockSprite, tileSprite, timerFont, config.Balance.PlotsOpenAt(0));
 
             Transform landmarks = Child(rootGo.transform, "Landmarks");
             Transform tree = Landmark(landmarks, grid, farm.WisdomTreeCell, "WisdomTree", blockSprite, new Vector2(1.8f, 6f), Hex("#6E8B5A"), "Wisdom Tree");
@@ -162,7 +167,7 @@ namespace RadiantOrchard.Editor
             }
         }
 
-        private static PlotView[] BuildPlots(Transform parent, Grid grid, FarmDefinition farm, Sprite plotSprite, Sprite block, Sprite tile, int openAtStart)
+        private static PlotView[] BuildPlots(Transform parent, Grid grid, FarmDefinition farm, Sprite plotSprite, Sprite block, Sprite tile, TMP_FontAsset timerFont, int openAtStart)
         {
             Transform container = Child(parent, "Plots");
             var plots = new PlotView[farm.PlotCells.Count];
@@ -186,16 +191,47 @@ namespace RadiantOrchard.Editor
                 var fruit = Renderer(root.transform, "Fruit", tile, 2, centre + new Vector3(0f, 2.2f, 0f));
                 fruit.transform.localScale = new Vector3(0.35f, 0.35f, 1f);
                 fruit.enabled = false;
+                // Above the fully grown placeholder tree (2.6 tall), so the countdown never hides behind it.
+                (GameObject timer, TMP_Text timerText) = Timer(root.transform, block, timerFont, centre + new Vector3(0f, 3.1f, 0f));
 
                 var view = root.AddComponent<PlotView>();
                 var so = new SerializedObject(view);
                 so.FindProperty("_soil").objectReferenceValue = soil;
                 so.FindProperty("_tree").objectReferenceValue = tree;
                 so.FindProperty("_fruit").objectReferenceValue = fruit;
+                so.FindProperty("_timer").objectReferenceValue = timer;
+                so.FindProperty("_timerText").objectReferenceValue = timerText;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 plots[i] = view;
             }
             return plots;
+        }
+
+        // Placeholder countdown pill: a cream block with world-space text, hidden until a tree is growing.
+        private static (GameObject, TMP_Text) Timer(Transform parent, Sprite block, TMP_FontAsset font, Vector3 localPosition)
+        {
+            var root = new GameObject("Timer");
+            root.transform.SetParent(parent, false);
+            root.transform.localPosition = localPosition;
+
+            var background = Renderer(root.transform, "Background", block, 3, new Vector3(0f, -0.3f, 0f));
+            background.transform.localScale = new Vector3(1.9f / (block.rect.width / block.pixelsPerUnit), 0.6f / (block.rect.height / block.pixelsPerUnit), 1f);
+            background.color = TimerBackground;
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(root.transform, false);
+            var text = textGo.AddComponent<TextMeshPro>();
+            text.font = font;
+            text.text = string.Empty;
+            text.fontSize = 5f;
+            text.color = TimerInk;
+            text.alignment = TextAlignmentOptions.Center;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.rectTransform.sizeDelta = new Vector2(1.9f, 0.6f);
+            text.sortingOrder = 4;
+
+            root.SetActive(false);
+            return (root, text);
         }
 
         private static SpriteRenderer Renderer(Transform parent, string name, Sprite sprite, int order, Vector3 localPosition)
