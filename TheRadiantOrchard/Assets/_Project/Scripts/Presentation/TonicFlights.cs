@@ -137,7 +137,8 @@ namespace RadiantOrchard.Presentation
                 () => Instantiate(_prefab, transform),
                 view => view.gameObject.SetActive(true),
                 view => view.gameObject.SetActive(false),
-                view => Destroy(view.gameObject),
+                // Unity clears every pool when Play mode stops, after the scene has already destroyed the tonics.
+                view => { if (view != null) Destroy(view.gameObject); },
                 collectionCheck: false);
 
             // Create the first few up front so the first harvests do not instantiate mid-game.

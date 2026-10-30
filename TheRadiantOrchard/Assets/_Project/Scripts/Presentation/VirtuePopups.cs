@@ -67,7 +67,8 @@ namespace RadiantOrchard.Presentation
                 () => Instantiate(_prefab, transform),
                 popup => popup.gameObject.SetActive(true),
                 popup => popup.gameObject.SetActive(false),
-                popup => Destroy(popup.gameObject),
+                // Unity clears every pool when Play mode stops, after the scene has already destroyed the pop-ups.
+                popup => { if (popup != null) Destroy(popup.gameObject); },
                 collectionCheck: false);
 
             var warm = new VirtuePopup[_prewarm];
