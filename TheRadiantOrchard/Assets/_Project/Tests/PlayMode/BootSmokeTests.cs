@@ -22,29 +22,18 @@ namespace RadiantOrchard.Tests.PlayMode
         public void SetUp()
         {
             _saveDir = Path.Combine(Path.GetTempPath(), "RadiantOrchardBootTest", Guid.NewGuid().ToString("N"));
-            Bootstrapper.SaveDirectoryOverride = _saveDir;
         }
 
         [TearDown]
         public void TearDown()
         {
-            foreach (var bootstrapper in Object.FindObjectsByType<Bootstrapper>(FindObjectsSortMode.None))
-                Object.Destroy(bootstrapper.gameObject);
-            Bootstrapper.SaveDirectoryOverride = null;
-            if (Directory.Exists(_saveDir)) Directory.Delete(_saveDir, true);
+            TestGame.Shutdown(_saveDir);
         }
 
         [UnityTest]
         public IEnumerator BootLoadsGameRunsTenSecondsAndSaves()
         {
-            SceneManager.LoadScene("Boot");
-
-            float waited = 0f;
-            while (SceneManager.GetActiveScene().name != "Game" && waited < 10f)
-            {
-                waited += Time.unscaledDeltaTime;
-                yield return null;
-            }
+            yield return TestGame.Boot(_saveDir);
 
             Assert.AreEqual("Game", SceneManager.GetActiveScene().name, "Boot did not hand over to Game.");
             Assert.IsNotNull(AppServices.Current, "Bootstrapper did not publish the services.");

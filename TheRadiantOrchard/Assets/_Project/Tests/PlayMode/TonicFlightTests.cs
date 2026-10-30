@@ -28,16 +28,7 @@ namespace RadiantOrchard.Tests.PlayMode
         public IEnumerator SetUp()
         {
             _saveDir = Path.Combine(Path.GetTempPath(), "RadiantOrchardTonicTest", Guid.NewGuid().ToString("N"));
-            Bootstrapper.SaveDirectoryOverride = _saveDir;
-            SceneManager.LoadScene("Boot");
-
-            float waited = 0f;
-            while ((SceneManager.GetActiveScene().name != "Game" || AppServices.Current == null) && waited < 10f)
-            {
-                waited += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            yield return null;
+            yield return TestGame.Boot(_saveDir);
 
             _services = AppServices.Current;
             // Test code may search the scene; the no-Find rule is for runtime code.
@@ -49,10 +40,7 @@ namespace RadiantOrchard.Tests.PlayMode
         [TearDown]
         public void TearDown()
         {
-            foreach (var bootstrapper in Object.FindObjectsByType<Bootstrapper>(FindObjectsSortMode.None))
-                Object.Destroy(bootstrapper.gameObject);
-            Bootstrapper.SaveDirectoryOverride = null;
-            if (Directory.Exists(_saveDir)) Directory.Delete(_saveDir, true);
+            TestGame.Shutdown(_saveDir);
         }
 
         [UnityTest]

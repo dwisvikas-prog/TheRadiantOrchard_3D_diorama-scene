@@ -33,15 +33,7 @@ namespace RadiantOrchard.Tests.PlayMode
             saved.Bench.Add(new BenchVisitorState("strawberry", 1_700_000_000_000));
             File.WriteAllText(Path.Combine(_saveDir, LocalFileStore.MainFileName), JsonUtility.ToJson(saved));
 
-            Bootstrapper.SaveDirectoryOverride = _saveDir;
-            SceneManager.LoadScene("Boot");
-            float waited = 0f;
-            while ((SceneManager.GetActiveScene().name != "Game" || AppServices.Current == null) && waited < 10f)
-            {
-                waited += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            yield return null;
+            yield return TestGame.Boot(_saveDir);
 
             _services = AppServices.Current;
             Assert.IsNotNull(_services, "Boot did not start.");
@@ -51,10 +43,7 @@ namespace RadiantOrchard.Tests.PlayMode
         [TearDown]
         public void TearDown()
         {
-            foreach (var bootstrapper in Object.FindObjectsByType<Bootstrapper>(FindObjectsSortMode.None))
-                Object.Destroy(bootstrapper.gameObject);
-            Bootstrapper.SaveDirectoryOverride = null;
-            if (Directory.Exists(_saveDir)) Directory.Delete(_saveDir, true);
+            TestGame.Shutdown(_saveDir);
         }
 
         [UnityTest]
