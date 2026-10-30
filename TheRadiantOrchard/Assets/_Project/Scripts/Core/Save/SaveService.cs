@@ -31,8 +31,9 @@ namespace RadiantOrchard.Core
         public bool IsDirty => _dirty;
 
         /// <summary>
-        /// True when save.json or save.bak was written by a newer build. Nothing is written for the rest of the session,
-        /// so this older build can never replace that progress (a write would push it to save.bak, the next one erase it).
+        /// True when save.json or save.bak was written by a newer build, or after DeleteAndStopSaving. Nothing is written
+        /// for the rest of the session, so this older build can never replace that progress (a write would push it to
+        /// save.bak, the next one erase it) and a deleted save stays deleted.
         /// </summary>
         public bool WritesBlocked { get; private set; }
 
@@ -73,6 +74,17 @@ namespace RadiantOrchard.Core
         }
 
         public void MarkDirty() => _dirty = true;
+
+        /// <summary>
+        /// Dev tool: deletes the save and its backup and blocks writes for the rest of the session, so pausing or
+        /// quitting cannot write the old state back. The next launch starts a new game.
+        /// </summary>
+        public void DeleteAndStopSaving()
+        {
+            WritesBlocked = true;
+            _dirty = false;
+            _store.Delete();
+        }
 
         /// <summary>Saves if there are unsaved changes and the minimum interval has passed. Returns true if it wrote.</summary>
         public bool Tick(float realtimeSeconds)

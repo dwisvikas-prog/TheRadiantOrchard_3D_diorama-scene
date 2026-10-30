@@ -8,6 +8,7 @@
         "RadiantOrchard.Presentation",
         "RadiantOrchard.UI",
         "RadiantOrchard.Editor",
+        "RadiantOrchard.Dev",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

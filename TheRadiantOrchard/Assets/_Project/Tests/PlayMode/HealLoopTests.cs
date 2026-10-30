@@ -39,11 +39,8 @@ namespace RadiantOrchard.Tests.PlayMode
             yield return null;
 
             _services = AppServices.Current;
-            // Test code may search the scene; the no-Find rule is for runtime code.
-            var installer = Object.FindFirstObjectByType<GameInstaller>();
             Assert.IsNotNull(_services, "Boot did not start.");
-            Assert.IsNotNull(installer);
-            _plots = installer.DevPlots;
+            _plots = DevGame.Current?.Plots;
             Assert.IsNotNull(_plots, "GameInstaller did not finish wiring (check the console for missing references).");
         }
 

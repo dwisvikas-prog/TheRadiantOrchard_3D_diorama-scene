@@ -65,6 +65,10 @@ namespace RadiantOrchard.App
             _tonics.Arrived += OnTonicArrived;
             _hud.Init(services.State, services.Events, services.Config.Strings);
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal);
+#endif
+
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
@@ -79,14 +83,12 @@ namespace RadiantOrchard.App
             if (HealRules.Accepts(_visitor.RequestedFruitId, fruitId)) _heal.Heal(fruitId);
         }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        /// <summary>For dev tools only (Radiant Orchard > Dev menu, later the dev panel).</summary>
-        public PlotManager DevPlots => _plots;
-#endif
-
         private void OnDestroy()
         {
             if (_services == null) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (DevGame.Current != null && DevGame.Current.Plots == _plots) DevGame.Current = null;
+#endif
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             _plotsPresenter?.Dispose();
