@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
 using RadiantOrchard.Core;
-using RadiantOrchard.Gameplay;
 using UnityEngine;
 using UnityEngine.Pool;
 
 namespace RadiantOrchard.Presentation
 {
     /// <summary>
-    /// Turns every harvested fruit into a glowing tonic that arcs to its target and pops (CLAUDE.md 5.5). One runner
+    /// Flies glowing tonics (CLAUDE.md 5.5): each arcs from the tree to the point it is given and pops. One runner
     /// moves all tonics in flight from a pooled set (ENGINEERING_GUIDE 7), so a flight allocates nothing per frame.
-    /// Until visitors exist (W1·21) the target is the first waiting spot on the path. Arrived fires when a tonic
-    /// reaches its target, for the heal to pick up.
+    /// Who a tonic is for is decided elsewhere (HarvestDelivery); the token it carries comes back in Arrived.
     /// </summary>
     public sealed class TonicFlights : MonoBehaviour
     {
@@ -24,6 +22,7 @@ namespace RadiantOrchard.Presentation
             public float Elapsed;
             public bool HasArrived;
             public string FruitId;
+            public int Token;
         }
 
         [SerializeField] private TonicView _prefab;
@@ -35,38 +34,19 @@ namespace RadiantOrchard.Presentation
         [Min(0f)] [SerializeField] private float _sidewaysNudge = 0.5f;
         [Min(0.01f)] [SerializeField] private float _popSeconds = 0.15f;
         [Min(1f)] [SerializeField] private float _popScale = 1.6f;
-        [Tooltip("Where on the target the tonic lands, relative to its feet (world units).")]
-        [SerializeField] private Vector2 _targetOffset = new Vector2(0f, 1.2f);
         [Min(1)] [SerializeField] private int _prewarm = 4;
 
         private readonly List<Flight> _active = new List<Flight>(16);
         private ObjectPool<TonicView> _pool;
-        private EventBus _events;
-        private GameConfig _config;
-        private FarmView _farm;
-        private bool _subscribed;
 
-        /// <summary>A tonic reached its target: fruit id and the landing point.</summary>
-        public event Action<string, Vector2> Arrived;
-
-        /// <summary>Where tonics fly. The first waiting spot until W1·21 points it at a visitor.</summary>
-        public Transform Target { get; set; }
+        /// <summary>A tonic reached its target: fruit id, the token it was launched with, and the landing point.</summary>
+        public event Action<string, int, Vector2> Arrived;
 
         public int ActiveCount => _active.Count;
         public int PooledCount => _pool != null ? _pool.CountAll : 0;
 
-        public void Init(EventBus events, GameConfig config, FarmView farm)
-        {
-            _events = events;
-            _config = config;
-            _farm = farm;
-            if (Target == null && farm.WaitingSpots.Count > 0) Target = farm.WaitingSpots[0];
-            EnsurePool();
-            Subscribe();
-        }
-
-        /// <summary>Sends one tonic from a point to a point. Harvests come through FruitHarvested; tests call this directly.</summary>
-        public void Launch(Vector2 from, Vector2 to, Color colour, string fruitId)
+        /// <summary>Sends one tonic from a point to a point; token comes back in Arrived (e.g. the visitor it is for).</summary>
+        public void Launch(Vector2 from, Vector2 to, Color colour, string fruitId, int token)
         {
             EnsurePool();
             TonicView view = _pool.Get();
@@ -78,6 +58,7 @@ namespace RadiantOrchard.Presentation
                 Control = TonicArc.ControlPoint(from, to, _arcHeight, UnityEngine.Random.Range(-_sidewaysNudge, _sidewaysNudge)),
                 End = to,
                 FruitId = fruitId,
+                Token = token,
             });
         }
 
@@ -100,7 +81,7 @@ namespace RadiantOrchard.Presentation
                 {
                     f.HasArrived = true;
                     f.View.MoveTo(f.End);
-                    Arrived?.Invoke(f.FruitId, f.End);
+                    Arrived?.Invoke(f.FruitId, f.Token, f.End);
                 }
 
                 float pop = (f.Elapsed - _flightSeconds) / _popSeconds;
@@ -121,14 +102,7 @@ namespace RadiantOrchard.Presentation
 
         private void Update() => Step(Time.deltaTime);
 
-        private void OnHarvested(FruitHarvested e)
-        {
-            if (Target == null || e.Plot < 0 || e.Plot >= _farm.Plots.Count || _farm.Plots[e.Plot] == null) return;
-            FruitDefinition fruit = _config.FindFruit(e.FruitId);
-            Color colour = fruit != null ? fruit.Tint : Color.white;
-            Vector2 target = (Vector2)Target.position + _targetOffset;
-            Launch(_farm.Plots[e.Plot].FruitPosition, target, colour, e.FruitId);
-        }
+        private void Start() => EnsurePool();
 
         private void EnsurePool()
         {
@@ -145,22 +119,6 @@ namespace RadiantOrchard.Presentation
             var warm = new TonicView[_prewarm];
             for (int i = 0; i < warm.Length; i++) warm[i] = _pool.Get();
             for (int i = 0; i < warm.Length; i++) _pool.Release(warm[i]);
-        }
-
-        private void Subscribe()
-        {
-            if (_subscribed || _events == null || !isActiveAndEnabled) return;
-            _events.Subscribe<FruitHarvested>(OnHarvested);
-            _subscribed = true;
-        }
-
-        private void OnEnable() => Subscribe();
-
-        private void OnDisable()
-        {
-            if (!_subscribed) return;
-            _events.Unsubscribe<FruitHarvested>(OnHarvested);
-            _subscribed = false;
         }
 
         private void Awake()

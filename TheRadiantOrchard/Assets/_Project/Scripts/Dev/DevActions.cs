@@ -67,6 +67,13 @@ namespace RadiantOrchard.Dev
             return $"Healed {count}: +{seeds} seeds, {game.State.HealedTotal} healed in total.";
         }
 
+        public static string SpawnVisitor(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            int id = game.Visitors.SpawnNow();
+            return id >= 0 ? $"Visitor {id} is on the way." : "No room on the path, or nothing planted yet.";
+        }
+
         public static string DumpSave(DevGame game)
         {
             if (game == null) return NotRunning;

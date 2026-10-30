@@ -49,7 +49,8 @@ namespace RadiantOrchard.Tests.EditMode
             GameState state = _save.Load(_config.Balance);
             var plots = new PlotManager(state, _config, time, events, _save.MarkDirty);
             var heal = new HealService(state, _config, events, _save.MarkDirty);
-            _game = new DevGame(_config, state, time, events, _save, plots, heal);
+            var visitors = new VisitorManager(state, _config, events, heal, new System.Random(1));
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors);
         }
 
         [Test]
@@ -119,6 +120,16 @@ namespace RadiantOrchard.Tests.EditMode
             DevActions.AddSeeds(_game, 5);
             Assert.IsFalse(_save.SaveNow(), "A pause or quit must not write the old state back.");
             Assert.IsNull(_store.Json);
+        }
+
+        [Test]
+        public void VisitorNowNeedsSomethingPlanted()
+        {
+            StringAssert.Contains("nothing planted", DevActions.SpawnVisitor(_game));
+            _game.Plots.TryPlant(0, "strawberry");
+            DevActions.SpawnVisitor(_game);
+            Assert.AreEqual(1, _game.Visitors.Count);
+            Assert.AreEqual("strawberry", _game.Visitors.GetAt(0).FruitId);
         }
 
         [Test]

@@ -20,7 +20,7 @@ namespace RadiantOrchard.App
         [SerializeField] private GestureRecognizer _gestures;
         [SerializeField] private PlantMenuView _plantMenu;
         [SerializeField] private TonicFlights _tonics;
-        [SerializeField] private PlaceholderVisitor _visitor;
+        [SerializeField] private VisitorsPresenter _visitorViews;
         [SerializeField] private VirtuePopups _popups;
         [SerializeField] private HudView _hud;
 
@@ -30,6 +30,8 @@ namespace RadiantOrchard.App
         private FarmPointerHandler _pointer;
         private HealService _heal;
         private HealPresenter _healPresenter;
+        private VisitorManager _visitors;
+        private HarvestDelivery _delivery;
 
         private void Awake()
         {
@@ -42,9 +44,9 @@ namespace RadiantOrchard.App
             }
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
-                || _visitor == null || _popups == null || _hud == null)
+                || _visitorViews == null || _popups == null || _hud == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor, Popups and HUD must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups and HUD must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -58,15 +60,15 @@ namespace RadiantOrchard.App
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty);
-            _visitor.Init(services.Config);
-            _healPresenter = new HealPresenter(_visitor, _popups, services.Config, services.Events);
-            _tonics.Target = _visitor.transform;
-            _tonics.Init(services.Events, services.Config, _farmView);
-            _tonics.Arrived += OnTonicArrived;
+            _visitors = new VisitorManager(services.State, services.Config, services.Events, _heal, new System.Random());
+            services.Clock.Ticked += TickVisitors;
+            _visitorViews.Init(_visitors, services.Config, services.Events, _farmView);
+            _healPresenter = new HealPresenter(_visitorViews, _popups, services.Config, services.Events);
+            _delivery = new HarvestDelivery(services.Events, _visitors, _visitorViews, _tonics, _farmView, services.Config);
             _hud.Init(services.State, services.Events, services.Config.Strings);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
@@ -77,11 +79,7 @@ namespace RadiantOrchard.App
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }
 
-        // Until the Week 2 basket (CLAUDE.md 5.5), a tonic the visitor did not ask for just pops at the spot.
-        private void OnTonicArrived(string fruitId, Vector2 point)
-        {
-            if (HealRules.Accepts(_visitor.RequestedFruitId, fruitId)) _heal.Heal(fruitId);
-        }
+        private void TickVisitors() => _visitors.Tick(_services.Clock.IntervalSeconds);
 
         private void OnDestroy()
         {
@@ -91,10 +89,11 @@ namespace RadiantOrchard.App
 #endif
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
+            if (_visitors != null) _services.Clock.Ticked -= TickVisitors;
             _plotsPresenter?.Dispose();
             _pointer?.Dispose();
             _healPresenter?.Dispose();
-            if (_tonics != null) _tonics.Arrived -= OnTonicArrived;
+            _delivery?.Dispose();
         }
     }
 }

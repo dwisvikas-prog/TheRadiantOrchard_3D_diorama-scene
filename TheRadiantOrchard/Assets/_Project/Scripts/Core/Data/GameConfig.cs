@@ -15,11 +15,14 @@ namespace RadiantOrchard.Core
         [SerializeField] private FarmDefinition _farm;
         [Tooltip("All fruits, in the order the plant menu shows them.")]
         [SerializeField] private FruitDefinition[] _fruits = new FruitDefinition[0];
+        [Tooltip("Visitor kinds. Phase 1 has one; Phase 2 adds special visitors.")]
+        [SerializeField] private VisitorDefinition[] _visitors = new VisitorDefinition[0];
 
         public BalanceConfig Balance => _balance;
         public StringTable Strings => _strings;
         public FarmDefinition Farm => _farm;
         public IReadOnlyList<FruitDefinition> Fruits => _fruits;
+        public IReadOnlyList<VisitorDefinition> Visitors => _visitors;
 
         /// <summary>Fruit with the given save-file id, or null if none.</summary>
         public FruitDefinition FindFruit(string id)
@@ -38,6 +41,9 @@ namespace RadiantOrchard.Core
                 Debug.LogError($"{name}: Strings is not assigned.", this);
             if (_farm == null)
                 Debug.LogError($"{name}: Farm is not assigned.", this);
+
+            if (_visitors.Length == 0)
+                Debug.LogError($"{name}: at least one Visitor definition is needed.", this);
 
             var seen = new HashSet<string>();
             for (int i = 0; i < _fruits.Length; i++)

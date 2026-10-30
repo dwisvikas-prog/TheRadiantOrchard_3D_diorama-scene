@@ -23,7 +23,8 @@ namespace RadiantOrchard.Gameplay
         }
 
         /// <summary>Heals with this fruit's tonic. Returns the seeds paid (0 for an unknown fruit).</summary>
-        public int Heal(string fruitId)
+        /// <param name="visitorId">Who was healed, for the colour sweep and pop-up; -1 for dev heals with nobody on the path.</param>
+        public int Heal(string fruitId, int visitorId = -1)
         {
             FruitDefinition fruit = _config.FindFruit(fruitId);
             if (fruit == null)
@@ -40,7 +41,7 @@ namespace RadiantOrchard.Gameplay
             _markDirty();
 
             _events.Publish(new SeedsChanged(_state.Seeds, seeds));
-            _events.Publish(new VisitorHealed(fruit.Id, fruit.VirtueNameKey, seeds, _state.HealedTotal));
+            _events.Publish(new VisitorHealed(visitorId, fruit.Id, fruit.VirtueNameKey, seeds, _state.HealedTotal));
             Telemetry.Log("visitor_healed", fruit.Id);
             return seeds;
         }

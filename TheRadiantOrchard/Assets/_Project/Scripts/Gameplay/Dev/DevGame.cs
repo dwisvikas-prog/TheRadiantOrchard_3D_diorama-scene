@@ -11,7 +11,7 @@ namespace RadiantOrchard.Gameplay
     /// </summary>
     public sealed class DevGame
     {
-        public DevGame(GameConfig config, GameState state, TimeService time, EventBus events, SaveService save, PlotManager plots, HealService heal)
+        public DevGame(GameConfig config, GameState state, TimeService time, EventBus events, SaveService save, PlotManager plots, HealService heal, VisitorManager visitors)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             State = state ?? throw new ArgumentNullException(nameof(state));
@@ -20,6 +20,7 @@ namespace RadiantOrchard.Gameplay
             Save = save ?? throw new ArgumentNullException(nameof(save));
             Plots = plots ?? throw new ArgumentNullException(nameof(plots));
             Heal = heal ?? throw new ArgumentNullException(nameof(heal));
+            Visitors = visitors ?? throw new ArgumentNullException(nameof(visitors));
         }
 
         /// <summary>The running game, or null outside the Game scene and in release builds.</summary>
@@ -32,5 +33,6 @@ namespace RadiantOrchard.Gameplay
         public SaveService Save { get; }
         public PlotManager Plots { get; }
         public HealService Heal { get; }
+        public VisitorManager Visitors { get; }
     }
 }

@@ -54,36 +54,48 @@ namespace RadiantOrchard.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator HarvestingAStrawberryHealsTheVisitor()
+        public IEnumerator AVisitorAsksForTheStrawberryAndIsHealedByIt()
         {
             GameState state = _services.State;
+            VisitorManager visitors = DevGame.Current.Visitors;
             Assert.AreEqual(0, state.Seeds);
-            Assert.AreEqual(0, state.HealedTotal);
+            Assert.AreEqual(0, visitors.Count, "No visitors before anything is planted.");
 
             Assert.AreEqual(PlantResult.Planted, _plots.TryPlant(0, "strawberry"));
+
+            // The first visitor comes right away and walks to their spot.
+            float waited = 0f;
+            while ((visitors.Count == 0 || visitors.GetAt(0).Phase != VisitorPhase.Waiting) && waited < 8f)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            Assert.AreEqual(VisitorPhase.Waiting, visitors.GetAt(0).Phase, "A visitor arrived and waits at a spot.");
+            Assert.AreEqual("strawberry", visitors.GetAt(0).FruitId, "They ask for the only fruit planted.");
+
             _plots.RipenNow(0);
             Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(0, GestureType.DoubleTap));
-
             yield return new WaitForSeconds(TonicFlightAndPop);
 
             Assert.AreEqual(_services.Config.Balance.SeedsPerHeal, state.Seeds, "+10 seeds when the tonic lands.");
             Assert.AreEqual(1, state.HealedTotal, "+1 healed.");
-            Assert.AreEqual(1, state.HealedSinceQuiz);
+            Assert.AreEqual(VisitorPhase.Leaving, visitors.GetAt(0).Phase, "They walk off once healed.");
         }
 
         [UnityTest]
-        public IEnumerator AFruitTheVisitorDidNotAskForHealsNobody()
+        public IEnumerator AHarvestWithNobodyWaitingPaysNothing()
         {
             GameState state = _services.State;
             state.Seeds = 100;
             Assert.AreEqual(PlantResult.Planted, _plots.TryPlant(1, "pineapple"));
             int seedsAfterPlanting = state.Seeds;
+            // Harvested in the same frame, before the first visitor has even appeared.
             _plots.RipenNow(1);
             Assert.AreEqual(HarvestJudgement.Harvest, _plots.HandleGesture(1, GestureType.DoubleTap));
 
             yield return new WaitForSeconds(TonicFlightAndPop);
 
-            Assert.AreEqual(seedsAfterPlanting, state.Seeds, "Until the Week 2 basket, an unrequested tonic pays nothing.");
+            Assert.AreEqual(seedsAfterPlanting, state.Seeds, "Until the Week 2 basket, a tonic nobody is waiting for pays nothing.");
             Assert.AreEqual(0, state.HealedTotal);
         }
     }

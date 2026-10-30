@@ -18,6 +18,8 @@ MonoBehaviour:
   _visitorSpawnIntervalSeconds: 30
   _maxVisitorsOnPath: 3
   _patienceSeconds: 90
+  _visitorWalkInSeconds: 4
+  _visitorWalkOutSeconds: 4
   _benchSeats: 3
   _maxOfflineArrivals: 3
   _basketMaxPerFruit: 3

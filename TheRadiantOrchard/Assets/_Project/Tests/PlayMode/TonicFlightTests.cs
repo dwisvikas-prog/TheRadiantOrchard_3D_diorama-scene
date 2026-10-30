@@ -44,7 +44,6 @@ namespace RadiantOrchard.Tests.PlayMode
             _tonics = Object.FindFirstObjectByType<TonicFlights>();
             Assert.IsNotNull(_services, "Boot did not start.");
             Assert.IsNotNull(_tonics, "No TonicFlights in Game (Radiant Orchard > Setup > Build Tonic).");
-            Assert.IsNotNull(_tonics.Target, "Tonics have no target.");
         }
 
         [TearDown]
@@ -62,7 +61,7 @@ namespace RadiantOrchard.Tests.PlayMode
             int arrivals = 0;
             string arrivedFruit = null;
             Vector2 landed = default;
-            _tonics.Arrived += (fruit, point) =>
+            _tonics.Arrived += (fruit, token, point) =>
             {
                 arrivals++;
                 arrivedFruit = fruit;
@@ -77,7 +76,9 @@ namespace RadiantOrchard.Tests.PlayMode
 
             Assert.AreEqual(1, arrivals);
             Assert.AreEqual("strawberry", arrivedFruit);
-            Assert.Less(Vector2.Distance(landed, _tonics.Target.position), 2f, "The tonic lands at its target.");
+            // Nobody is waiting yet, so the tonic lands over the first waiting spot.
+            var farm = Object.FindFirstObjectByType<FarmView>();
+            Assert.Less(Vector2.Distance(landed, farm.WaitingSpots[0].position), 2f, "The tonic lands at its target.");
             Assert.AreEqual(0, _tonics.ActiveCount, "Back in the pool after the pop.");
             Assert.AreEqual(pooled, _tonics.PooledCount, "No new tonic was created.");
         }
@@ -100,7 +101,7 @@ namespace RadiantOrchard.Tests.PlayMode
         [UnityTest]
         public IEnumerator AFlightAllocatesNothingPerFrame()
         {
-            _tonics.Launch(Vector2.zero, new Vector2(6f, 2f), Color.red, "strawberry");
+            _tonics.Launch(Vector2.zero, new Vector2(6f, 2f), Color.red, "strawberry", -1);
             const float dt = 1f / 60f;
             _tonics.Step(dt);
 
