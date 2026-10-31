@@ -26,6 +26,8 @@ namespace RadiantOrchard.App
         [SerializeField] private BasketView _basket;
         [SerializeField] private ComboView _combo;
         [SerializeField] private VibrancyMeterView _meter;
+        [SerializeField] private ZoneBannerView _banner;
+        [SerializeField] private ZoneUnlockSequence _zoneUnlock;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -51,9 +53,10 @@ namespace RadiantOrchard.App
             }
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
-                || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null || _meter == null)
+                || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null || _meter == null
+                || _banner == null || _zoneUnlock == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo and Meter must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo, Meter, Banner and Zone Unlock must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -95,6 +98,9 @@ namespace RadiantOrchard.App
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
+            _banner.Init(services.Config.Strings);
+            // After the zones presenter, so a zone is marked pending before its sequence looks at it.
+            _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
                 _plots, _plantMenu, services.Config.Balance.SwipeSampleSpacing);
 

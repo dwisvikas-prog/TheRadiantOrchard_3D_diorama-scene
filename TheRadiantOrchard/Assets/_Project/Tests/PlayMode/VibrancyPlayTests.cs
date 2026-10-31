@@ -40,6 +40,15 @@ namespace RadiantOrchard.Tests.PlayMode
                 Assert.AreEqual(z < stage ? 1f : 0f, farm.ZoneColours[z].Saturation, $"Zone {z + 1} at stage {stage}.");
         }
 
+        // The zone unlock sequence plays each stage reached (about 5 s each) before the zone is in colour.
+        private static IEnumerator WaitForSequence(ZoneUnlockSequence sequence)
+        {
+            yield return null;
+            yield return null;
+            for (float t = 0f; sequence.IsPlaying && t < 40f; t += Time.deltaTime) yield return null;
+            Assert.IsFalse(sequence.IsPlaying, "The zone unlock sequence finished.");
+        }
+
         private static int OpenPlots(GameState state)
         {
             int open = 0;
@@ -78,9 +87,10 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.AreEqual("Stage 0", meter.StageText);
             Assert.AreEqual("0/40", meter.CountText);
 
+            var sequence = Object.FindFirstObjectByType<ZoneUnlockSequence>();
             DevActions.SetStage(game, 2);
-            Assert.IsTrue(farm.ZoneColours[1].IsSweeping, "Zone 2 sweeps into colour.");
-            yield return new WaitForSeconds(farm.ZoneSweepSeconds + 0.3f);
+            Assert.AreEqual(5, OpenPlots(game.State), "Plots open at once; only the colour waits for the camera.");
+            yield return WaitForSequence(sequence);
 
             AssertZones(farm, 2);
             Assert.AreEqual(5, OpenPlots(game.State));
@@ -97,7 +107,7 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.AreEqual(5, OpenPlots(game.State), "Plots stay open.");
 
             DevActions.SetStage(game, 5);
-            yield return new WaitForSeconds(farm.ZoneSweepSeconds + 0.3f);
+            yield return WaitForSequence(sequence);
             AssertZones(farm, 5);
             Assert.AreEqual(9, OpenPlots(game.State));
             Assert.AreEqual("Farm restored", meter.CountText);

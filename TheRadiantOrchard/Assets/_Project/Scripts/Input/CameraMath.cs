@@ -17,6 +17,15 @@ namespace RadiantOrchard.Input
         }
 
         /// <summary>
+        /// Orthographic size that shows the whole area at this aspect, plus a margin (0.15 = 15% extra around it).
+        /// </summary>
+        public static float FitSize(Rect area, float aspect, float margin)
+        {
+            float half = Mathf.Max(area.height * 0.5f, aspect > 0f ? area.width / (2f * aspect) : area.width * 0.5f);
+            return half * (1f + Mathf.Max(0f, margin));
+        }
+
+        /// <summary>
         /// Keeps the view inside the bounds. On an axis where the view is larger than the bounds, it centres instead.
         /// </summary>
         public static Vector2 ClampPosition(Vector2 position, float orthoSize, float aspect, Rect bounds)

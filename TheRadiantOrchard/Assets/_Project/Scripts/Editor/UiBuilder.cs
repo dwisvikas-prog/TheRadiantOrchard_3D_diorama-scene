@@ -85,6 +85,7 @@ namespace RadiantOrchard.Editor
             BasketView basket = BuildBasket(hud.transform, bold);
             ComboView combo = BuildCombo(hud.transform, bold);
             VibrancyMeterView meter = BuildMeter(hud.transform, bold);
+            ZoneBannerView banner = BuildBanner(hud.transform, bold);
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -98,11 +99,12 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_basket").objectReferenceValue = basket;
             so.FindProperty("_combo").objectReferenceValue = combo;
             so.FindProperty("_meter").objectReferenceValue = meter;
+            so.FindProperty("_banner").objectReferenceValue = banner;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket, Combo and Meter wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter, zone banner) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket, Combo, Meter and Banner wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -301,6 +303,47 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_fill").objectReferenceValue = fill;
             so.ApplyModifiedPropertiesWithoutUndo();
             return meter;
+        }
+
+        // Zone unlock banner in the upper middle of the screen; hidden until a stage is reached. The view sits on an
+        // always-active holder so it can fade the banner out.
+        private static ZoneBannerView BuildBanner(Transform hud, TMP_FontAsset bold)
+        {
+            var holder = Rect("ZoneBanner", hud);
+            Stretch(holder);
+            var panel = Rect("Panel", holder);
+            Anchor(panel, new Vector2(0.5f, 0.5f), new Vector2(900f, 260f), new Vector2(0f, 230f));
+            var panelImage = panel.gameObject.AddComponent<Image>();
+            panelImage.color = Cream;
+            panelImage.raycastTarget = false;
+            var group = panel.gameObject.AddComponent<CanvasGroup>();
+            group.interactable = false;
+            group.blocksRaycasts = false;
+
+            var stripe = Rect("Stripe", panel);
+            Anchor(stripe, new Vector2(0.5f, 1f), new Vector2(900f, 14f), new Vector2(0f, -7f));
+            var stripeImage = stripe.gameObject.AddComponent<Image>();
+            stripeImage.color = Accent;
+            stripeImage.raycastTarget = false;
+
+            TMP_Text title = Text("Title", panel, 64f, Ink, bold);
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            Anchor(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(840f, 90f), new Vector2(0f, -75f));
+            TMP_Text body = Text("Body", panel, 36f, Accent, bold);
+            body.enableAutoSizing = true;
+            body.fontSizeMin = 22f;
+            body.fontSizeMax = 36f;
+            Anchor(body.rectTransform, new Vector2(0.5f, 0f), new Vector2(840f, 120f), new Vector2(0f, 80f));
+
+            var banner = holder.gameObject.AddComponent<ZoneBannerView>();
+            var so = new SerializedObject(banner);
+            so.FindProperty("_root").objectReferenceValue = panel.gameObject;
+            so.FindProperty("_group").objectReferenceValue = group;
+            so.FindProperty("_title").objectReferenceValue = title;
+            so.FindProperty("_body").objectReferenceValue = body;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            panel.gameObject.SetActive(false);
+            return banner;
         }
 
         // Fixed preferred size for a child of a layout group.

@@ -21,6 +21,10 @@ namespace RadiantOrchard.Input
         private BalanceConfig _balance;
         private CameraController _camera;
         private Vector2 _lastPosition;
+        private bool _locked;
+        // After a lock ends, input stays ignored until every finger (or the mouse button) is up, so a press that was
+        // held through a scripted sequence never turns into a gesture or a pan.
+        private bool _waitForRelease;
 
         public event Action<Vector2> Tapped;
         public event Action<GestureType, Vector2> Gestured;
@@ -30,6 +34,22 @@ namespace RadiantOrchard.Input
         {
             _balance = balance;
             _camera = cameraController;
+        }
+
+        /// <summary>
+        /// While locked (a scripted sequence such as the zone unlock), no taps, gestures or pans are recognised; locking
+        /// cancels a gesture in progress.
+        /// </summary>
+        public bool Locked
+        {
+            get => _locked;
+            set
+            {
+                if (value == _locked) return;
+                _locked = value;
+                _rules.Cancel();
+                if (!value) _waitForRelease = true;
+            }
         }
 
         private void OnEnable() => EnhancedTouchSupport.Enable();
@@ -42,7 +62,12 @@ namespace RadiantOrchard.Input
 
         private void Update()
         {
-            if (_balance == null) return;
+            if (_balance == null || _locked) return;
+            if (_waitForRelease)
+            {
+                if (Touch.activeTouches.Count > 0 || (Mouse.current != null && Mouse.current.leftButton.isPressed)) return;
+                _waitForRelease = false;
+            }
             ApplyTuning();
 
             var touches = Touch.activeTouches;

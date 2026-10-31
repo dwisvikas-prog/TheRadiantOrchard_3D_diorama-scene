@@ -165,3 +165,13 @@ MonoBehaviour:
     _text: '{0}/{1}'
   - _key: ui.vibrancy.complete
     _text: Farm restored
+  - _key: ui.banner.title
+    _text: 'Stage {0}!'
+  - _key: ui.banner.fruits
+    _text: 'New fruit: {0}'
+  - _key: ui.banner.plots
+    _text: '{0} new plots'
+  - _key: ui.banner.zone
+    _text: A new part of the orchard is in colour
+  - _key: ui.banner.complete
+    _text: The whole orchard is restored

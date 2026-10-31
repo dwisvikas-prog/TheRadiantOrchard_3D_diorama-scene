@@ -27,6 +27,12 @@ namespace RadiantOrchard.Input
         public bool IsPinching { get; private set; }
         public Rect Bounds => _bounds;
 
+        /// <summary>While locked (a scripted camera move), pinch and scroll zoom are ignored.</summary>
+        public bool Locked { get; set; }
+
+        public Vector2 Position => transform.position;
+        public float Size => _camera.orthographicSize;
+
         public void Init(BalanceConfig balance)
         {
             // GameInstaller may call this before this object's Awake has run.
@@ -57,6 +63,20 @@ namespace RadiantOrchard.Input
             EndPinch();
         }
 
+        /// <summary>Places the view at a world position and orthographic size, clamped like any other move.</summary>
+        public void SetView(Vector2 position, float orthoSize)
+        {
+            if (_balance == null) return;
+            _camera.orthographicSize = orthoSize;
+            transform.position = new Vector3(position.x, position.y, transform.position.z);
+            ApplyClamp();
+        }
+
+        /// <summary>The orthographic size that frames this world area with a margin, within the zoom limits.</summary>
+        public float SizeToFit(Rect area, float margin) =>
+            CameraMath.ClampOrthoSize(CameraMath.FitSize(area, _camera.aspect, margin),
+                _balance.CameraMinOrthoSize, _balance.CameraMaxOrthoSize, _bounds, _camera.aspect);
+
         /// <summary>Moves the view with a finger that moved by screenDelta pixels (the ground follows the finger).</summary>
         public void PanByScreenDelta(Vector2 screenDelta)
         {
@@ -70,6 +90,11 @@ namespace RadiantOrchard.Input
         private void Update()
         {
             if (_balance == null) return;
+            if (Locked)
+            {
+                EndPinch();
+                return;
+            }
 
             var touches = Touch.activeTouches;
             if (touches.Count >= 2)
