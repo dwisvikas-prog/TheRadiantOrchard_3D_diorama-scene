@@ -49,6 +49,16 @@ namespace RadiantOrchard.Gameplay
         /// <summary>While set (a daily wave waiting for the path to empty), no regular visitors are sent.</summary>
         public bool HoldSpawning { get; set; }
 
+        /// <summary>Visitors can come: at least one fruit has been planted.</summary>
+        public bool HasPlantedFruit
+        {
+            get
+            {
+                CollectPlantedFruits();
+                return _planted.Count > 0;
+            }
+        }
+
         /// <summary>Path spots nobody is using.</summary>
         public int FreeSpots => Math.Min(Balance.MaxVisitorsOnPath, _spotTaken.Length) - PathCount;
 

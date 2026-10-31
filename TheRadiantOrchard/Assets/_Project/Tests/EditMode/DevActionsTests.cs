@@ -55,7 +55,9 @@ namespace RadiantOrchard.Tests.EditMode
             var boosts = new BoostService(events);
             var quiz = new QuizManager(state, _config, events, boosts, _save.MarkDirty, new System.Random(1));
             var wave = new DailyWave(state, _config, time, events, visitors, _save.MarkDirty);
-            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz, wave);
+            var miniEvents = new MiniEventManager(state, _config, events, _save.MarkDirty, new System.Random(1),
+                new GoldenHourEffect(boosts), new VisitorRushEffect(visitors), new BlessingRainEffect(plots));
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz, wave, miniEvents);
         }
 
         [Test]

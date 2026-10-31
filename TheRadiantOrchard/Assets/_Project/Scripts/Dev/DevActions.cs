@@ -76,6 +76,13 @@ namespace RadiantOrchard.Dev
             return $"Golden Harvest: x{b.GoldenHarvestSeedMultiplier} seeds for {b.GoldenHarvestSeconds:0} s.";
         }
 
+        /// <summary>Starts this mini-event now (CLAUDE.md 5.11) if it can do something; the heal count is left alone.</summary>
+        public static string MiniEvent(DevGame game, string id)
+        {
+            if (game == null) return NotRunning;
+            return game.MiniEvents.StartNow(id) ? $"Event '{id}' started." : $"Event '{id}' cannot start now (nothing for it to do).";
+        }
+
         /// <summary>Brings the daily visitor wave now (CLAUDE.md 5.10), whatever the date; it waits for free spots.</summary>
         public static string DailyWave(DevGame game)
         {

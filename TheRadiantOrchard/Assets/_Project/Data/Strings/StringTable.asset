@@ -196,7 +196,19 @@ MonoBehaviour:
   - _key: ui.quiz.title
     _text: The Wisdom Tree asks
   - _key: ui.golden_harvest.timer
-    _text: 'Golden Harvest {0}'
+    _text: 'Double seeds {0}'
+  - _key: event.golden_hour.title
+    _text: Golden Hour!
+  - _key: event.golden_hour.body
+    _text: 'Double seeds for {0}'
+  - _key: event.visitor_rush.title
+    _text: Visitor Rush!
+  - _key: event.visitor_rush.body
+    _text: More visitors are on their way
+  - _key: event.blessing_rain.title
+    _text: Blessing Rain!
+  - _key: event.blessing_rain.body
+    _text: Every tree is ripe
   - _key: ui.wave.title
     _text: Daily visitors!
   - _key: ui.wave.body

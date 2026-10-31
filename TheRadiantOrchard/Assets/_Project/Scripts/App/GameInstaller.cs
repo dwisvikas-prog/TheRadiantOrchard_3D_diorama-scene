@@ -30,7 +30,7 @@ namespace RadiantOrchard.App
         [SerializeField] private ZoneUnlockSequence _zoneUnlock;
         [SerializeField] private QuizPanelView _quizPanel;
         [SerializeField] private GoldenHarvestView _goldenHarvest;
-        [Tooltip("How long the daily wave's banners stay up (seconds).")]
+        [Tooltip("How long the daily wave's and mini-events' banners stay up (seconds).")]
         [Min(0.5f)] [SerializeField] private float _waveBannerSeconds = 3.5f;
 
         private AppServices _services;
@@ -49,6 +49,8 @@ namespace RadiantOrchard.App
         private WisdomTreePresenter _treePresenter;
         private DailyWave _dailyWave;
         private DailyWaveAnnouncer _waveAnnouncer;
+        private MiniEventManager _miniEvents;
+        private MiniEventAnnouncer _eventAnnouncer;
 
         private void Awake()
         {
@@ -84,6 +86,8 @@ namespace RadiantOrchard.App
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty, services.Time, _boosts);
             _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
             _dailyWave = new DailyWave(services.State, services.Config, services.Time, services.Events, _visitors, services.Save.MarkDirty);
+            _miniEvents = new MiniEventManager(services.State, services.Config, services.Events, services.Save.MarkDirty, new System.Random(),
+                new GoldenHourEffect(_boosts), new VisitorRushEffect(_visitors), new BlessingRainEffect(_plots));
             services.Clock.Ticked += TickVisitors;
             _delivery = new DeliveryService(services.State, services.Config, services.Events, _visitors, services.Save.MarkDirty);
             _plots.HarvestGate = _delivery.CanTake;
@@ -102,7 +106,7 @@ namespace RadiantOrchard.App
                 _cameraController.GetComponent<Camera>(), services.Config);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz, _dailyWave);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz, _dailyWave, _miniEvents);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
@@ -110,6 +114,7 @@ namespace RadiantOrchard.App
             _quizPanel.Init(_quiz, services.Config);
             _banner.Init(services.Config.Strings);
             _waveAnnouncer = new DailyWaveAnnouncer(_banner, services.Config.Strings, services.Events, _waveBannerSeconds);
+            _eventAnnouncer = new MiniEventAnnouncer(_banner, services.Config, services.Events, _waveBannerSeconds);
             // After the zones presenter, so a zone is marked pending before its sequence looks at it.
             _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu, _quizPanel);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
@@ -167,6 +172,8 @@ namespace RadiantOrchard.App
             _zones?.Dispose();
             _treePresenter?.Dispose();
             _waveAnnouncer?.Dispose();
+            _eventAnnouncer?.Dispose();
+            _miniEvents?.Dispose();
             _dailyWave?.Dispose();
             _quiz?.Dispose();
             _vibrancy?.Dispose();

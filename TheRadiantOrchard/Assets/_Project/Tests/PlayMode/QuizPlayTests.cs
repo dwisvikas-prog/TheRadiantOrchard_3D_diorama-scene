@@ -87,7 +87,7 @@ namespace RadiantOrchard.Tests.PlayMode
             Assert.IsFalse(_tree.IsGlowing);
             Assert.IsTrue(_game.Boosts.IsActive(BoostService.GoldenHarvest));
             Assert.IsTrue(_golden.IsShowing, "Gold edge glow and timer.");
-            StringAssert.StartsWith("Golden Harvest ", _golden.TimerText);
+            StringAssert.StartsWith("Double seeds ", _golden.TimerText);
             StringAssert.Contains(":", _golden.TimerText);
 
             DevActions.Heal(_game, 1);

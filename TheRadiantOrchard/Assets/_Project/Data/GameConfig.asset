@@ -38,3 +38,7 @@ MonoBehaviour:
   _visitors:
   - {fileID: 11400000, guid: 3cb3a4d8acafeab49987e89313efd0a0, type: 2}
   _quiz: {fileID: 11400000, guid: 803142d754d5e2f4dbd80161fe7bfe57, type: 2}
+  _miniEvents:
+  - {fileID: 11400000, guid: 1e8ecd7253e83fa42918a26f3ace8a67, type: 2}
+  - {fileID: 11400000, guid: 118276b8a6c82a1478d24b3c15c170b2, type: 2}
+  - {fileID: 11400000, guid: f8835dd3baada604890b9f60f38e23ac, type: 2}

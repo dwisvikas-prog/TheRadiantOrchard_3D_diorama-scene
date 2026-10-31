@@ -99,11 +99,12 @@ namespace RadiantOrchard.Dev
             Place(_fps.rectTransform, new Vector2(1f, 1f), new Vector2(180f, 64f), new Vector2(-260f, -52f));
 
             RectTransform panel = Rect("Panel", safe);
-            Place(panel, new Vector2(1f, 1f), new Vector2(640f, 900f), new Vector2(-340f, -550f));
+            // Sized to fit under the DEV button on a 20:9 phone, where the canvas scales it up about 1.12x.
+            Place(panel, new Vector2(1f, 1f), new Vector2(640f, 790f), new Vector2(-340f, -495f));
             panel.gameObject.AddComponent<Image>().color = PanelColour;
             var column = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             column.padding = new RectOffset(20, 20, 20, 20);
-            column.spacing = 12f;
+            column.spacing = 6f;
             column.childControlWidth = true;
             column.childControlHeight = true;
             column.childForceExpandHeight = false;
@@ -122,13 +123,16 @@ namespace RadiantOrchard.Dev
             Header(panel, "Visitors");
             Row(panel, ("Visitor now", DevActions.SpawnVisitor), ("Heal 1", g => DevActions.Heal(g, 1)), ("Heal 10", g => DevActions.Heal(g, 10)));
             Row(panel, ("Run out patience", DevActions.RunOutPatience), ("Away 10 min", g => DevActions.ArriveAfterAway(g, TimeSpan.FromMinutes(10))), ("Daily wave", DevActions.DailyWave));
+            Header(panel, "Events");
+            Row(panel, ("Golden Hour", g => DevActions.MiniEvent(g, "golden_hour")), ("Visitor Rush", g => DevActions.MiniEvent(g, "visitor_rush")),
+                       ("Blessing Rain", g => DevActions.MiniEvent(g, "blessing_rain")));
             Header(panel, "Save");
             RectTransform saveRow = Row(panel, ("Dump save", DevActions.DumpSave));
             Button delete = MakeButton(saveRow, "Delete save", DangerColour, () => Run(DevActions.DeleteSave));
             Fill(delete);
             _status = Label(panel, "Ready.", 24f, TextAlignmentOptions.TopLeft);
             _status.textWrappingMode = TextWrappingModes.Normal;
-            Fill(_status, 90f);
+            Fill(_status, 40f);
 
             _panel.SetActive(false);
         }
@@ -137,7 +141,7 @@ namespace RadiantOrchard.Dev
         {
             TMP_Text label = Label(parent, text, 28f, TextAlignmentOptions.Left);
             label.color = new Color(0.85f, 0.9f, 0.8f, 1f);
-            Fill(label, 40f);
+            Fill(label, 30f);
             return label;
         }
 
@@ -149,7 +153,7 @@ namespace RadiantOrchard.Dev
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
-            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 70f;
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 54f;
             foreach (var (label, action) in buttons)
                 Fill(MakeButton(row, label, ButtonColour, () => Run(action)));
             return row;

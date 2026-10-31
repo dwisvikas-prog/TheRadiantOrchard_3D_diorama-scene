@@ -21,9 +21,12 @@ namespace RadiantOrchard.Core
         [SerializeField] private VisitorDefinition[] _visitors = new VisitorDefinition[0];
         [Tooltip("The Wisdom Tree's quiz questions (5.8).")]
         [SerializeField] private QuizSet _quiz;
+        [Tooltip("The mini-events one of which starts every MiniEventEveryHeals heals (5.11).")]
+        [SerializeField] private MiniEventDefinition[] _miniEvents = new MiniEventDefinition[0];
 
         public BalanceConfig Balance => _balance;
         public QuizSet Quiz => _quiz;
+        public IReadOnlyList<MiniEventDefinition> MiniEvents => _miniEvents;
         public StringTable Strings => _strings;
         public FarmDefinition Farm => _farm;
         public IReadOnlyList<FruitDefinition> Fruits => _fruits;
