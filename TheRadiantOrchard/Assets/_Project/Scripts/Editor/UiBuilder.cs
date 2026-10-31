@@ -103,6 +103,8 @@ namespace RadiantOrchard.Editor
             Object.DestroyImmediate(quizSource);
             var quiz = (GameObject)PrefabUtility.InstantiatePrefab(quizPrefab, canvasGo.transform);
             Stretch(quiz.GetComponent<RectTransform>());
+            // Last, so the bloom's verse card covers everything.
+            VersePanelView verse = BuildVersePanel(canvasGo.transform, bold);
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -119,11 +121,72 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_banner").objectReferenceValue = banner;
             so.FindProperty("_quizPanel").objectReferenceValue = quiz.GetComponent<QuizPanelView>();
             so.FindProperty("_goldenHarvest").objectReferenceValue = goldenHarvest;
+            so.FindProperty("_versePanel").objectReferenceValue = verse;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter, zone banner, Golden Harvest), PlantMenu and QuizPanel prefabs built; GestureRecognizer, PlantMenu, HUD, Basket, Combo, Meter, Banner, QuizPanel and Golden Harvest wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter, zone banner, Golden Harvest), verse card, PlantMenu and QuizPanel prefabs built; GestureRecognizer, PlantMenu, HUD, Basket, Combo, Meter, Banner, QuizPanel, Golden Harvest and Verse Panel wired into the GameInstaller.");
+        }
+
+        // The bloom's verse card (CLAUDE.md 5.9, UI-10 placeholder): dimmed screen, a cream card with the title, the verse,
+        // its reference and "Tap to continue"; a tap anywhere closes it. Its own Canvas, so the fade does not rebuild the HUD.
+        private static VersePanelView BuildVersePanel(Transform canvas, TMP_FontAsset bold)
+        {
+            var holder = Rect("VersePanel", canvas);
+            Stretch(holder);
+            holder.gameObject.AddComponent<Canvas>();
+            holder.gameObject.AddComponent<GraphicRaycaster>();
+
+            var root = Rect("Root", holder);
+            Stretch(root);
+            var group = root.gameObject.AddComponent<CanvasGroup>();
+            root.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.45f);
+            var backdrop = root.gameObject.AddComponent<Button>();
+            backdrop.transition = Selectable.Transition.None;
+
+            var safe = Rect("Safe", root);
+            Stretch(safe);
+            safe.gameObject.AddComponent<SafeArea>();
+            var card = Rect("Card", safe);
+            Centre(card, new Vector2(1300f, 620f), Vector2.zero);
+            var cardImage = card.gameObject.AddComponent<Image>();
+            cardImage.color = Cream;
+            cardImage.raycastTarget = false;
+            var stripe = Rect("Stripe", card);
+            Anchor(stripe, new Vector2(0.5f, 1f), new Vector2(1300f, 14f), new Vector2(0f, -7f));
+            var stripeImage = stripe.gameObject.AddComponent<Image>();
+            stripeImage.color = Accent;
+            stripeImage.raycastTarget = false;
+
+            TMP_Text title = Text("Title", card, 60f, Accent, bold);
+            title.enableAutoSizing = true;
+            title.fontSizeMin = 36f;
+            title.fontSizeMax = 60f;
+            Anchor(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(1200f, 90f), new Vector2(0f, -80f));
+            TMP_Text verse = Text("Verse", card, 42f, Ink, bold);
+            verse.enableAutoSizing = true;
+            verse.fontSizeMin = 26f;
+            verse.fontSizeMax = 42f;
+            Anchor(verse.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(1160f, 280f), new Vector2(0f, 10f));
+            TMP_Text reference = Text("Reference", card, 36f, Accent, bold);
+            Anchor(reference.rectTransform, new Vector2(0.5f, 0f), new Vector2(1160f, 60f), new Vector2(0f, 120f));
+            TMP_Text more = Text("Continue", card, 28f, Ink, bold);
+            more.alpha = 0.6f;
+            Anchor(more.rectTransform, new Vector2(0.5f, 0f), new Vector2(1160f, 50f), new Vector2(0f, 50f));
+
+            var view = holder.gameObject.AddComponent<VersePanelView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("_root").objectReferenceValue = root.gameObject;
+            so.FindProperty("_group").objectReferenceValue = group;
+            so.FindProperty("_backdrop").objectReferenceValue = backdrop;
+            so.FindProperty("_title").objectReferenceValue = title;
+            so.FindProperty("_verse").objectReferenceValue = verse;
+            so.FindProperty("_reference").objectReferenceValue = reference;
+            so.FindProperty("_continue").objectReferenceValue = more;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            root.gameObject.SetActive(false);
+            return view;
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)

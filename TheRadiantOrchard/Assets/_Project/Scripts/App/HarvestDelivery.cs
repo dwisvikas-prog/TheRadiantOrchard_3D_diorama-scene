@@ -66,25 +66,31 @@ namespace RadiantOrchard.App
 
         private void OnDeliveryStarted(DeliveryStarted e)
         {
-            Vector2 from = e.FromPlot == DeliveryService.FromBasket ? BasketWorldPoint() : FruitPoint(e.FromPlot);
+            Vector2 from = e.FromPlot == DeliveryService.FromBasket ? BasketWorldPoint() : FruitPoint(e.FromPlot, e.FruitId);
             if (e.IsGolden) _goldenTonics.Add(e.VisitorId);
             _tonics.Launch(from, _visitorViews.TonicTarget(e.VisitorId), Tint(e.FruitId, e.IsGolden), e.FruitId, e.VisitorId);
         }
 
         private void OnBasketed(FruitBasketed e) =>
-            _tonics.Launch(FruitPoint(e.FromPlot), BasketWorldPoint(), Tint(e.FruitId, e.IsGolden), e.FruitId, IntoBasket);
+            _tonics.Launch(FruitPoint(e.FromPlot, e.FruitId), BasketWorldPoint(), Tint(e.FruitId, e.IsGolden), e.FruitId, IntoBasket);
 
         private void OnHeld(HarvestHeld e) =>
-            _popups.Show(_config.Strings.Get(BasketFullKey), Tint(e.FruitId, false), FruitPoint(e.Plot));
+            _popups.Show(_config.Strings.Get(BasketFullKey), Tint(e.FruitId, false), FruitPoint(e.Plot, e.FruitId));
 
         private void OnTonicArrived(string fruitId, int visitor, Vector2 point)
         {
             if (visitor != IntoBasket) _delivery.Complete(visitor, fruitId, _goldenTonics.Remove(visitor));
         }
 
-        // The fruit on that plot's tree; the basket when the plot is unknown (fruit from code, not a tree).
-        private Vector2 FruitPoint(int plot) =>
-            plot >= 0 && plot < _farm.Plots.Count && _farm.Plots[plot] != null ? _farm.Plots[plot].FruitPosition : BasketWorldPoint();
+        // The fruit on that plot's tree, or on the blooming Wisdom Tree; the basket when the plot is unknown (fruit from
+        // code, not a tree).
+        private Vector2 FruitPoint(int plot, string fruitId)
+        {
+            if (plot == WisdomTreeBloom.Tree && _farm.WisdomTreeView != null)
+                for (int i = 0; i < _config.Fruits.Count; i++)
+                    if (_config.Fruits[i] != null && _config.Fruits[i].Id == fruitId) return _farm.WisdomTreeView.FruitPosition(i);
+            return plot >= 0 && plot < _farm.Plots.Count && _farm.Plots[plot] != null ? _farm.Plots[plot].FruitPosition : BasketWorldPoint();
+        }
 
         private Color Tint(string fruitId, bool golden)
         {

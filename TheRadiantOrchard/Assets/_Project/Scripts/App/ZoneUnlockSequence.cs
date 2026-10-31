@@ -14,8 +14,9 @@ namespace RadiantOrchard.App
     /// colour washes over it with petals (and the sting hook, ZoneWaveStarted), a banner names what opened, and the
     /// camera glides back to where the player was. Touch input is locked throughout and open panels close (a waiting quiz
     /// stays waiting); the game itself keeps running.
-    /// Stages reached together play one after another. Lives in App because it joins camera, input, zones and UI.
-    /// Feel numbers are on the component.
+    /// Stages reached together play one after another. After the final stage the Wisdom Tree bloom follows (5.9): the
+    /// camera frames the tree, the bloom bursts open with petals and the verse card shows until tapped (or a time limit).
+    /// Lives in App because it joins camera, input, zones and UI. Feel numbers are on the component.
     /// </summary>
     public sealed class ZoneUnlockSequence : MonoBehaviour
     {
@@ -27,6 +28,8 @@ namespace RadiantOrchard.App
         [Min(0f)] [SerializeField] private float _afterWaveSeconds = 0.2f;
         [Tooltip("Extra view around the zone when the camera frames it (0.15 = 15%).")]
         [Min(0f)] [SerializeField] private float _zoomMargin = 0.15f;
+        [Tooltip("The verse card closes by itself after this long if nobody taps it.")]
+        [Min(1f)] [SerializeField] private float _verseMaxSeconds = 12f;
 
         private readonly Queue<int> _queue = new Queue<int>();
         private GameConfig _config;
@@ -37,18 +40,23 @@ namespace RadiantOrchard.App
         private ZoneBannerView _banner;
         private PlantMenuView _plantMenu;
         private QuizPanelView _quizPanel;
+        private WisdomTreePresenter _tree;
+        private VersePanelView _verse;
         private Coroutine _running;
         private bool _subscribed;
 
         public bool IsPlaying => _running != null;
         /// <summary>Zone sequences played to the end since the Game scene started.</summary>
         public int Played { get; private set; }
+        /// <summary>Bloom celebrations played to the end since the Game scene started.</summary>
+        public int BloomsPlayed { get; private set; }
         /// <summary>Total length of one zone's sequence before the camera returns, for tests.</summary>
         public float StageSeconds => _glideSeconds + (_zones != null ? _zones.SweepSeconds : 0f) + _afterWaveSeconds + _bannerSeconds;
         public float ReturnSeconds => _returnSeconds;
 
         public void Init(GameConfig config, EventBus events, CameraController cameraController, GestureRecognizer gestures,
-            ZonesPresenter zones, ZoneBannerView banner, PlantMenuView plantMenu, QuizPanelView quizPanel)
+            ZonesPresenter zones, ZoneBannerView banner, PlantMenuView plantMenu, QuizPanelView quizPanel, WisdomTreePresenter tree,
+            VersePanelView verse)
         {
             _config = config;
             _events = events;
@@ -58,6 +66,8 @@ namespace RadiantOrchard.App
             _banner = banner;
             _plantMenu = plantMenu;
             _quizPanel = quizPanel;
+            _tree = tree;
+            _verse = verse;
             Subscribe();
         }
 
@@ -80,25 +90,46 @@ namespace RadiantOrchard.App
                 int stage = _queue.Dequeue();
                 int zone = stage - 1;
                 // A dev stage-down while waiting greys the zone again; nothing to show.
-                if (zone < 0 || zone >= _zones.Count || !_zones.IsPending(zone)) continue;
-
-                Rect area = _zones.AreaOf(zone);
-                yield return Glide(area.center, _camera.SizeToFit(area, _zoomMargin), _glideSeconds);
-
-                _zones.Sweep(zone);
-                if (_particles != null) _particles.Play(area, _zones.SweepSeconds);
-                _events.Publish(new ZoneWaveStarted(stage));
-                yield return Wait(_zones.SweepSeconds + _afterWaveSeconds);
-
-                _banner.Show(StageUnlocks.For(_config, stage));
-                yield return Wait(_bannerSeconds);
-                _banner.Hide();
-                Played++;
+                if (zone >= 0 && zone < _zones.Count && _zones.IsPending(zone)) yield return Zone(stage, zone);
+                // Stages reached together are all announced before the first plays, so the bloom is already pending;
+                // it waits for the final stage's zone.
+                if (stage >= _config.Balance.StageThresholds.Count && _tree.BloomPending) yield return Bloom();
             }
 
             yield return Glide(startPosition, startSize, _returnSeconds);
             SetLocked(false);
             _running = null;
+        }
+
+        private IEnumerator Zone(int stage, int zone)
+        {
+            Rect area = _zones.AreaOf(zone);
+            yield return Glide(area.center, _camera.SizeToFit(area, _zoomMargin), _glideSeconds);
+
+            _zones.Sweep(zone);
+            if (_particles != null) _particles.Play(area, _zones.SweepSeconds);
+            _events.Publish(new ZoneWaveStarted(stage));
+            yield return Wait(_zones.SweepSeconds + _afterWaveSeconds);
+
+            _banner.Show(StageUnlocks.For(_config, stage));
+            yield return Wait(_bannerSeconds);
+            _banner.Hide();
+            Played++;
+        }
+
+        private IEnumerator Bloom()
+        {
+            Rect area = _tree.View.BloomArea;
+            yield return Glide(area.center, _camera.SizeToFit(area, _zoomMargin), _glideSeconds);
+
+            _tree.RevealBloom();
+            if (_particles != null) _particles.Play(area, _tree.View.RevealSeconds);
+            yield return Wait(_tree.View.RevealSeconds + _afterWaveSeconds);
+
+            _verse.Show();
+            for (float t = 0f; t < _verseMaxSeconds && _verse.IsOpen; t += Time.deltaTime) yield return null;
+            if (_verse.IsOpen) _verse.Hide();
+            BloomsPlayed++;
         }
 
         // Smooth start and stop between the current view and the target.

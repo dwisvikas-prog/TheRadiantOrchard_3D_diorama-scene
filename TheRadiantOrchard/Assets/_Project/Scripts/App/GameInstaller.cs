@@ -30,6 +30,7 @@ namespace RadiantOrchard.App
         [SerializeField] private ZoneUnlockSequence _zoneUnlock;
         [SerializeField] private QuizPanelView _quizPanel;
         [SerializeField] private GoldenHarvestView _goldenHarvest;
+        [SerializeField] private VersePanelView _versePanel;
         [Tooltip("How long the daily wave's and mini-events' banners stay up (seconds).")]
         [Min(0.5f)] [SerializeField] private float _waveBannerSeconds = 3.5f;
 
@@ -51,6 +52,7 @@ namespace RadiantOrchard.App
         private DailyWaveAnnouncer _waveAnnouncer;
         private MiniEventManager _miniEvents;
         private MiniEventAnnouncer _eventAnnouncer;
+        private WisdomTreeBloom _bloom;
 
         private void Awake()
         {
@@ -64,9 +66,9 @@ namespace RadiantOrchard.App
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
                 || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null || _meter == null
-                || _banner == null || _zoneUnlock == null || _quizPanel == null || _goldenHarvest == null)
+                || _banner == null || _zoneUnlock == null || _quizPanel == null || _goldenHarvest == null || _versePanel == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo, Meter, Banner, Zone Unlock, Quiz Panel and Golden Harvest must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo, Meter, Banner, Zone Unlock, Quiz Panel, Golden Harvest and Verse Panel must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -77,6 +79,9 @@ namespace RadiantOrchard.App
             _plots = new PlotManager(services.State, services.Config, services.Time, services.Events, services.Save.MarkDirty);
             // Before the plot views: a save that is ahead of its stage opens its plots first.
             _vibrancy = new VibrancyManager(services.State, services.Config, services.Events, _plots, services.Save.MarkDirty);
+            // After the vibrancy catch-up, so a save already at the final stage blooms.
+            _bloom = new WisdomTreeBloom(services.State, services.Config, services.Time, services.Events, services.Save.MarkDirty);
+            services.Clock.Ticked += _bloom.Tick;
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
@@ -91,6 +96,7 @@ namespace RadiantOrchard.App
             services.Clock.Ticked += TickVisitors;
             _delivery = new DeliveryService(services.State, services.Config, services.Events, _visitors, services.Save.MarkDirty);
             _plots.HarvestGate = _delivery.CanTake;
+            _bloom.HarvestGate = _delivery.CanTake;
             // After the visitors' tick, so a visitor who just reached their spot gets basket fruit the same tick.
             services.Clock.Ticked += _delivery.Tick;
             _visitorViews.Init(_visitors, services.Config, services.Events, _farmView);
@@ -100,25 +106,26 @@ namespace RadiantOrchard.App
             _combo.Init(services.Config, services.Events);
             _meter.Init(services.Config, services.State, services.Events);
             _zones = new ZonesPresenter(_farmView, services.State, services.Events);
-            _treePresenter = new WisdomTreePresenter(_farmView.WisdomTreeView, _quiz, services.Events);
+            _treePresenter = new WisdomTreePresenter(_farmView.WisdomTreeView, _quiz, _bloom, services.Config, services.Events);
             _goldenHarvest.Init(services.Config, _boosts, services.Events);
             _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
                 _cameraController.GetComponent<Camera>(), services.Config);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz, _dailyWave, _miniEvents);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz, _dailyWave, _miniEvents, _bloom);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
             _quizPanel.Init(_quiz, services.Config);
             _banner.Init(services.Config.Strings);
+            _versePanel.Init(services.Config.Strings);
             _waveAnnouncer = new DailyWaveAnnouncer(_banner, services.Config.Strings, services.Events, _waveBannerSeconds);
             _eventAnnouncer = new MiniEventAnnouncer(_banner, services.Config, services.Events, _waveBannerSeconds);
             // After the zones presenter, so a zone is marked pending before its sequence looks at it.
-            _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu, _quizPanel);
+            _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu, _quizPanel, _treePresenter, _versePanel);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
-                _plots, _plantMenu, _quiz, _quizPanel, services.Config.Balance.SwipeSampleSpacing);
+                _plots, _plantMenu, _quiz, _quizPanel, _bloom, services.Config, services.Config.Balance.SwipeSampleSpacing);
 
             // Once every view is listening: a new day's wave first, so it gets the empty path; then visitors who came
             // while the app was closed (or in the background) take any spots left.
@@ -157,6 +164,7 @@ namespace RadiantOrchard.App
             if (_plots != null) _services.Clock.Ticked -= _plots.Tick;
             if (_plotsPresenter != null) _services.Clock.Ticked -= _plotsPresenter.Tick;
             if (_delivery != null) _services.Clock.Ticked -= _delivery.Tick;
+            if (_bloom != null) _services.Clock.Ticked -= _bloom.Tick;
             if (_boosts != null) _services.Clock.Ticked -= TickBoosts;
             if (_visitors != null)
             {
@@ -177,6 +185,7 @@ namespace RadiantOrchard.App
             _dailyWave?.Dispose();
             _quiz?.Dispose();
             _vibrancy?.Dispose();
+            _bloom?.Dispose();
         }
     }
 }

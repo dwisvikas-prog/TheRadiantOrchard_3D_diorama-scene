@@ -197,6 +197,10 @@ MonoBehaviour:
     _text: The Wisdom Tree asks
   - _key: ui.golden_harvest.timer
     _text: 'Double seeds {0}'
+  - _key: ui.bloom.title
+    _text: 'The {0} is in bloom!'
+  - _key: ui.bloom.continue
+    _text: Tap to continue
   - _key: event.golden_hour.title
     _text: Golden Hour!
   - _key: event.golden_hour.body

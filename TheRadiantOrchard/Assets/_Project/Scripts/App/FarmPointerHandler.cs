@@ -9,7 +9,8 @@ using UnityEngine;
 namespace RadiantOrchard.App
 {
     /// <summary>
-    /// Turns gestures on the farm into actions. A tap on the Wisdom Tree while a quiz waits opens the quiz; a tap on an
+    /// Turns gestures on the farm into actions. A tap on a fruit of the blooming Wisdom Tree picks it (CLAUDE.md 5.9, no
+    /// gesture needed); elsewhere on the tree while a quiz waits it opens the quiz; a tap on an
     /// open, empty plot opens the plant menu; taps and harvest gestures on planted plots go to PlotManager, which judges
     /// them (HarvestRules). A swipe acts on every plot its path crosses. Lives in the composition root because it joins Input to UI and Gameplay, which may not
     /// reference each other. Dispose to unsubscribe.
@@ -24,10 +25,13 @@ namespace RadiantOrchard.App
         private readonly PlantMenuView _plantMenu;
         private readonly QuizManager _quiz;
         private readonly QuizPanelView _quizPanel;
+        private readonly WisdomTreeBloom _bloom;
+        private readonly GameConfig _config;
         private readonly float _swipeSampleSpacing;
 
         public FarmPointerHandler(GestureRecognizer gestures, Camera camera, FarmView farmView, FarmDefinition farm,
-            PlotManager plots, PlantMenuView plantMenu, QuizManager quiz, QuizPanelView quizPanel, float swipeSampleSpacingFraction)
+            PlotManager plots, PlantMenuView plantMenu, QuizManager quiz, QuizPanelView quizPanel, WisdomTreeBloom bloom, GameConfig config,
+            float swipeSampleSpacingFraction)
         {
             _gestures = gestures;
             _camera = camera;
@@ -37,6 +41,8 @@ namespace RadiantOrchard.App
             _plantMenu = plantMenu;
             _quiz = quiz;
             _quizPanel = quizPanel;
+            _bloom = bloom;
+            _config = config;
             _swipeSampleSpacing = swipeSampleSpacingFraction;
 
             _gestures.Tapped += OnTapped;
@@ -56,10 +62,21 @@ namespace RadiantOrchard.App
         private void OnTapped(Vector2 screen)
         {
             if (PanelOpen) return;
-            if (_quiz.IsReady && _farmView.WisdomTreeView != null && _farmView.WisdomTreeView.Contains(ToWorld(screen)))
+            WisdomTreeView tree = _farmView.WisdomTreeView;
+            if (tree != null)
             {
-                _quizPanel.Show();
-                return;
+                Vector2 world = ToWorld(screen);
+                int fruit = tree.FruitAt(world);
+                if (fruit >= 0 && fruit < _config.Fruits.Count && _bloom.IsRipe(_config.Fruits[fruit].Id))
+                {
+                    _bloom.TryHarvest(_config.Fruits[fruit].Id);
+                    return;
+                }
+                if (_quiz.IsReady && tree.Contains(world))
+                {
+                    _quizPanel.Show();
+                    return;
+                }
             }
             int plot = PlotAt(screen);
             if (plot < 0) return;

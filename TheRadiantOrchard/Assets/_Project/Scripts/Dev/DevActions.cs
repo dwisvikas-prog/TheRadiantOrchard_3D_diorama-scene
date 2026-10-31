@@ -50,10 +50,24 @@ namespace RadiantOrchard.Dev
             return $"Stage {game.State.VibrancyStage}, {game.State.HealedTotal} healed.";
         }
 
+        /// <summary>Ripens every planted tree, and every fruit on the Wisdom Tree once it blooms.</summary>
         public static string RipenAll(DevGame game)
         {
             if (game == null) return NotRunning;
-            return $"Ripened {game.Plots.RipenAll()} tree(s).";
+            int trees = game.Plots.RipenAll();
+            return game.Bloom.IsActive ? $"Ripened {trees} tree(s) and {game.Bloom.RipenAll()} Wisdom Tree fruit." : $"Ripened {trees} tree(s).";
+        }
+
+        /// <summary>
+        /// Brings the Wisdom Tree bloom (CLAUDE.md 5.9) the way play does: jumps to the final stage, so each stage still to
+        /// come plays its zone, then the bloom celebration once.
+        /// </summary>
+        public static string BloomNow(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            if (game.Bloom.IsActive) return "The Wisdom Tree is already in bloom.";
+            game.Vibrancy.SetStage(game.Vibrancy.LastStage);
+            return game.Bloom.IsActive ? "Final stage reached: the Wisdom Tree blooms." : "The bloom did not start (see the console).";
         }
 
         /// <summary>Ripens every planted tree and makes each fruit golden (CLAUDE.md 5.12), to test golden harvests.</summary>

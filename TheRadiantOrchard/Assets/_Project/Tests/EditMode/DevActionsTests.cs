@@ -57,7 +57,8 @@ namespace RadiantOrchard.Tests.EditMode
             var wave = new DailyWave(state, _config, time, events, visitors, _save.MarkDirty);
             var miniEvents = new MiniEventManager(state, _config, events, _save.MarkDirty, new System.Random(1),
                 new GoldenHourEffect(boosts), new VisitorRushEffect(visitors), new BlessingRainEffect(plots));
-            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz, wave, miniEvents);
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz, wave, miniEvents,
+                new WisdomTreeBloom(state, _config, time, events, _save.MarkDirty));
         }
 
         [Test]
@@ -115,6 +116,19 @@ namespace RadiantOrchard.Tests.EditMode
             DevActions.RipenAll(_game);
             Assert.AreEqual(TreeStage.Ripe, _game.Plots.Get(0).Stage);
             Assert.AreEqual(TreeStage.Ripe, _game.Plots.Get(1).Stage);
+        }
+
+        [Test]
+        public void BloomNowReachesTheFinalStageOnceAndRipenAllRegrowsTheTreeFruit()
+        {
+            StringAssert.Contains("blooms", DevActions.BloomNow(_game));
+            Assert.AreEqual(_game.Vibrancy.LastStage, _game.State.VibrancyStage);
+            Assert.IsTrue(_game.Bloom.IsActive);
+            StringAssert.Contains("already", DevActions.BloomNow(_game));
+
+            Assert.AreEqual(HarvestJudgement.Harvest, _game.Bloom.TryHarvest("cherry"));
+            StringAssert.Contains("1 Wisdom Tree fruit", DevActions.RipenAll(_game));
+            Assert.IsTrue(_game.Bloom.IsRipe("cherry"));
         }
 
         [Test]

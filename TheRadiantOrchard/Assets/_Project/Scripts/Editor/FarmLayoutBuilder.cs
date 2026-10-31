@@ -102,6 +102,7 @@ namespace RadiantOrchard.Editor
             Transform tree = Landmark(landmarks, grid, farm.WisdomTreeCell, "WisdomTree", blockSprite, new Vector2(1.8f, 6f), Hex("#6E8B5A"), "Wisdom Tree");
             WisdomTreeView treeView = AddTreeGlow(tree, new Vector2(1.8f, 6f));
             if (treeView == null) return;
+            AddTreeBloom(treeView, new Vector2(1.8f, 6f), config.Fruits.Count);
             Transform well = Landmark(landmarks, grid, farm.WellCell, "StoneWell", blockSprite, new Vector2(1.6f, 1.4f), Hex("#9AA39A"), "Stone Well");
             Transform bench = Landmark(landmarks, grid, farm.BenchCell, "Bench", blockSprite, new Vector2(2.6f, 0.6f), Hex("#8A5A35"), "Bench (3 seats)");
 
@@ -313,6 +314,60 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_glow").objectReferenceValue = glow;
             so.ApplyModifiedPropertiesWithoutUndo();
             return view;
+        }
+
+        // The bloom (CLAUDE.md 5.9, LM-03 placeholder): a pink crown of soft dots over the trunk with one fruit spot per
+        // fruit in two staggered rows, built hidden. Fruits are soft dots painted at runtime from each fruit's icon or tint.
+        private static void AddTreeBloom(WisdomTreeView view, Vector2 treeSizeWorld, int fruitCount)
+        {
+            var dot = AssetDatabase.LoadAssetAtPath<Sprite>(SoftDotPath);
+            var unlit = AssetDatabase.LoadAssetAtPath<Material>(UnlitSpriteMaterialPath);
+            Vector2 dotSize = dot.bounds.size;
+
+            var bloom = new GameObject("Bloom").transform;
+            bloom.SetParent(view.transform, false);
+            // Low on the trunk: the tree stands at the top of the farm, and at the default zoom the meter pill covers
+            // its top, where the fruits could not be tapped.
+            bloom.localPosition = new Vector3(0f, treeSizeWorld.y * 0.45f, 0f);
+
+            SpriteRenderer Dot(string name, Vector2 position, Vector2 size, Color colour, int order)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(bloom, false);
+                go.transform.localPosition = position;
+                go.transform.localScale = new Vector3(size.x / dotSize.x, size.y / dotSize.y, 1f);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = dot;
+                sr.sharedMaterial = unlit;
+                sr.color = colour;
+                sr.sortingOrder = order;
+                return sr;
+            }
+
+            SpriteRenderer crown = Dot("Crown", Vector2.zero, new Vector2(5.2f, 3.6f), Hex("#F4B8C8"), 1);
+            Color petal = Hex("#FFE3EC");
+            Dot("Blossom_L", new Vector2(-1.7f, -0.3f), new Vector2(1.8f, 1.5f), petal, 2);
+            Dot("Blossom_R", new Vector2(1.7f, -0.2f), new Vector2(1.8f, 1.5f), petal, 2);
+            Dot("Blossom_T", new Vector2(0.1f, 1.2f), new Vector2(2f, 1.4f), petal, 2);
+
+            // Two rows (5 on top, 4 below) spaced wider than a fingertip at the default zoom.
+            var fruits = new SpriteRenderer[fruitCount];
+            int top = (fruitCount + 1) / 2;
+            for (int i = 0; i < fruitCount; i++)
+            {
+                bool upper = i < top;
+                int inRow = upper ? i : i - top;
+                int rowCount = upper ? top : fruitCount - top;
+                float x = (inRow - (rowCount - 1) * 0.5f) * 0.95f;
+                fruits[i] = Dot("Fruit_" + (i + 1), new Vector2(x, upper ? 0.55f : -0.55f), new Vector2(0.7f, 0.7f), Color.white, 3);
+            }
+            bloom.gameObject.SetActive(false);
+
+            var so = new SerializedObject(view);
+            so.FindProperty("_bloom").objectReferenceValue = bloom;
+            so.FindProperty("_crown").objectReferenceValue = crown;
+            SetArray(so.FindProperty("_fruits"), fruits);
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static Transform Landmark(Transform parent, Grid grid, Vector2Int cell, string name, Sprite block, Vector2 sizeWorld, Color colour, string label)

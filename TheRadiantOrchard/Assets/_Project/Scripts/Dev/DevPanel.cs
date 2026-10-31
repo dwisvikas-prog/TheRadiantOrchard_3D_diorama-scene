@@ -119,7 +119,7 @@ namespace RadiantOrchard.Dev
             Row(panel, ($"+{SeedsToAdd} seeds", g => DevActions.AddSeeds(g, SeedsToAdd)), ("Ripen all", DevActions.RipenAll), ("Ripen golden", DevActions.RipenGolden));
             _stage = Header(panel, "Stage -");
             Row(panel, ("Stage -1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage - 1)),
-                       ("Stage +1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage + 1)));
+                       ("Stage +1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage + 1)), ("Bloom now", DevActions.BloomNow));
             Header(panel, "Visitors");
             Row(panel, ("Visitor now", DevActions.SpawnVisitor), ("Heal 1", g => DevActions.Heal(g, 1)), ("Heal 10", g => DevActions.Heal(g, 10)));
             Row(panel, ("Run out patience", DevActions.RunOutPatience), ("Away 10 min", g => DevActions.ArriveAfterAway(g, TimeSpan.FromMinutes(10))), ("Daily wave", DevActions.DailyWave));

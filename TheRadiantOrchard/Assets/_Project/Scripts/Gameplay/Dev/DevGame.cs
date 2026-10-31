@@ -11,7 +11,7 @@ namespace RadiantOrchard.Gameplay
     /// </summary>
     public sealed class DevGame
     {
-        public DevGame(GameConfig config, GameState state, TimeService time, EventBus events, SaveService save, PlotManager plots, HealService heal, VisitorManager visitors, DeliveryService delivery, BoostService boosts, VibrancyManager vibrancy, QuizManager quiz, DailyWave dailyWave, MiniEventManager miniEvents)
+        public DevGame(GameConfig config, GameState state, TimeService time, EventBus events, SaveService save, PlotManager plots, HealService heal, VisitorManager visitors, DeliveryService delivery, BoostService boosts, VibrancyManager vibrancy, QuizManager quiz, DailyWave dailyWave, MiniEventManager miniEvents, WisdomTreeBloom bloom)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             State = state ?? throw new ArgumentNullException(nameof(state));
@@ -27,6 +27,7 @@ namespace RadiantOrchard.Gameplay
             Quiz = quiz ?? throw new ArgumentNullException(nameof(quiz));
             DailyWave = dailyWave ?? throw new ArgumentNullException(nameof(dailyWave));
             MiniEvents = miniEvents ?? throw new ArgumentNullException(nameof(miniEvents));
+            Bloom = bloom ?? throw new ArgumentNullException(nameof(bloom));
         }
 
         /// <summary>The running game, or null outside the Game scene and in release builds.</summary>
@@ -46,5 +47,6 @@ namespace RadiantOrchard.Gameplay
         public QuizManager Quiz { get; }
         public DailyWave DailyWave { get; }
         public MiniEventManager MiniEvents { get; }
+        public WisdomTreeBloom Bloom { get; }
     }
 }
