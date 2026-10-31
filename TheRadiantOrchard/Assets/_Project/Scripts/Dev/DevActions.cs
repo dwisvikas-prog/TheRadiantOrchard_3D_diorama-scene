@@ -76,6 +76,14 @@ namespace RadiantOrchard.Dev
             return $"Golden Harvest: x{b.GoldenHarvestSeedMultiplier} seeds for {b.GoldenHarvestSeconds:0} s.";
         }
 
+        /// <summary>Brings the daily visitor wave now (CLAUDE.md 5.10), whatever the date; it waits for free spots.</summary>
+        public static string DailyWave(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            game.DailyWave.StartNow();
+            return game.DailyWave.IsPending ? "Daily wave waiting for the path to empty (or something to be planted)." : "Daily wave on its way.";
+        }
+
         /// <summary>Makes a Wisdom Tree quiz ready now (CLAUDE.md 5.8): the tree glows; tap it to answer.</summary>
         public static string QuizNow(DevGame game)
         {

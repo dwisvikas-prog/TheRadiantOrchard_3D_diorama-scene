@@ -12,6 +12,8 @@ namespace RadiantOrchard.Gameplay
         public int Seat = -1;
         public VisitorPhase Phase;
         public float Elapsed;
+        // Seconds of patience on the path; 0 = BalanceConfig.PatienceSeconds (the daily wave gives more).
+        public float PatienceSeconds;
         public bool Reserved;
         public bool RanOut;
         // Their entry in GameState.Bench once they have sat down; removed when healed.

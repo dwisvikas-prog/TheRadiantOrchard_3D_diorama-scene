@@ -121,7 +121,7 @@ namespace RadiantOrchard.Dev
                        ("Stage +1", g => DevActions.SetStage(g, g == null ? 0 : g.State.VibrancyStage + 1)));
             Header(panel, "Visitors");
             Row(panel, ("Visitor now", DevActions.SpawnVisitor), ("Heal 1", g => DevActions.Heal(g, 1)), ("Heal 10", g => DevActions.Heal(g, 10)));
-            Row(panel, ("Run out patience", DevActions.RunOutPatience), ("Away 10 min", g => DevActions.ArriveAfterAway(g, TimeSpan.FromMinutes(10))));
+            Row(panel, ("Run out patience", DevActions.RunOutPatience), ("Away 10 min", g => DevActions.ArriveAfterAway(g, TimeSpan.FromMinutes(10))), ("Daily wave", DevActions.DailyWave));
             Header(panel, "Save");
             RectTransform saveRow = Row(panel, ("Dump save", DevActions.DumpSave));
             Button delete = MakeButton(saveRow, "Delete save", DangerColour, () => Run(DevActions.DeleteSave));

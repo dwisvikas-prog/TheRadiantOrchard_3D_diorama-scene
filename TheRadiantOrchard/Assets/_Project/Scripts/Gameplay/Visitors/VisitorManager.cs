@@ -46,6 +46,12 @@ namespace RadiantOrchard.Gameplay
 
         private BalanceConfig Balance => _config.Balance;
 
+        /// <summary>While set (a daily wave waiting for the path to empty), no regular visitors are sent.</summary>
+        public bool HoldSpawning { get; set; }
+
+        /// <summary>Path spots nobody is using.</summary>
+        public int FreeSpots => Math.Min(Balance.MaxVisitorsOnPath, _spotTaken.Length) - PathCount;
+
         /// <summary>Everyone: on the path, on or walking to the bench, off-screen, and leaving.</summary>
         public int Count => _visitors.Count;
         public int SpotCount => _spotTaken.Length;
@@ -86,7 +92,7 @@ namespace RadiantOrchard.Gameplay
                         v.Elapsed -= Balance.VisitorWalkInSeconds;
                         v.Phase = VisitorPhase.Waiting;
                         break;
-                    case VisitorPhase.Waiting when !v.Reserved && !v.RanOut && v.Elapsed >= Balance.PatienceSeconds:
+                    case VisitorPhase.Waiting when !v.Reserved && !v.RanOut && v.Elapsed >= PatienceOf(v):
                         RunOut(v);
                         break;
                     case VisitorPhase.WalkingToBench when v.Elapsed >= Balance.VisitorWalkToBenchSeconds:
@@ -111,7 +117,27 @@ namespace RadiantOrchard.Gameplay
 
             // Held at the interval while the path is full, so the next visitor comes as soon as a spot frees.
             _spawnTimer = Math.Min(_spawnTimer + dt, Balance.VisitorSpawnIntervalSeconds);
-            if (_spawnTimer >= Balance.VisitorSpawnIntervalSeconds && TrySpawn()) _spawnTimer = 0f;
+            if (!HoldSpawning && _spawnTimer >= Balance.VisitorSpawnIntervalSeconds && TrySpawn()) _spawnTimer = 0f;
+        }
+
+        /// <summary>
+        /// Brings count visitors in together, walking in, each with this much patience (the daily wave, CLAUDE.md 5.10).
+        /// All or nothing: needs count free path spots and something planted. Writes their ids into ids (length at
+        /// least count) and returns how many came (count or 0). Restarts the spawn timer.
+        /// </summary>
+        public int SpawnGroup(int count, float patienceSeconds, int[] ids)
+        {
+            if (count <= 0 || FreeSpots < count) return 0;
+            CollectPlantedFruits();
+            if (_planted.Count == 0) return 0;
+            for (int i = 0; i < count; i++)
+            {
+                // Walking in side by side, only the first speaks, so their lines never pile up.
+                TrySpawn(patienceSeconds: patienceSeconds, speaks: i == 0);
+                ids[i] = _nextId - 1;
+            }
+            _spawnTimer = 0f;
+            return count;
         }
 
         /// <summary>
@@ -210,7 +236,9 @@ namespace RadiantOrchard.Gameplay
             _bench.SeatOrSendAway(v);
         }
 
-        private bool TrySpawn(bool alreadyWaiting = false)
+        private float PatienceOf(Visitor v) => v.PatienceSeconds > 0f ? v.PatienceSeconds : Balance.PatienceSeconds;
+
+        private bool TrySpawn(bool alreadyWaiting = false, float patienceSeconds = 0f, bool speaks = true)
         {
             int max = Math.Min(Balance.MaxVisitorsOnPath, _spotTaken.Length);
             if (PathCount >= max) return false;
@@ -225,9 +253,10 @@ namespace RadiantOrchard.Gameplay
             {
                 Id = _nextId++,
                 FruitId = fruitId,
-                LineKey = PickLine(fruitId),
+                LineKey = speaks ? PickLine(fruitId) : null,
                 Spot = spot,
                 Phase = alreadyWaiting ? VisitorPhase.Waiting : VisitorPhase.WalkingIn,
+                PatienceSeconds = patienceSeconds,
             };
             _spotTaken[spot] = true;
             PathCount++;
@@ -266,10 +295,10 @@ namespace RadiantOrchard.Gameplay
         private VisitorInfo Info(Visitor v)
         {
             float patience = v.Phase == VisitorPhase.WalkingIn ? 1f
-                : v.Phase == VisitorPhase.Waiting ? Math.Max(0f, 1f - v.Elapsed / Balance.PatienceSeconds)
+                : v.Phase == VisitorPhase.Waiting ? Math.Max(0f, 1f - v.Elapsed / PatienceOf(v))
                 : 0f;
             string definition = _config.Visitors.Count > 0 ? _config.Visitors[0].Id : null;
-            return new VisitorInfo(v.Id, definition, v.FruitId, v.LineKey, v.Spot, v.Seat, v.Phase, v.Elapsed, patience, v.RanOut, v.Reserved);
+            return new VisitorInfo(v.Id, definition, v.FruitId, v.LineKey, v.Spot, v.Seat, v.Phase, v.Elapsed, patience, v.RanOut, v.Reserved, PatienceOf(v));
         }
     }
 }

@@ -30,6 +30,8 @@ namespace RadiantOrchard.App
         [SerializeField] private ZoneUnlockSequence _zoneUnlock;
         [SerializeField] private QuizPanelView _quizPanel;
         [SerializeField] private GoldenHarvestView _goldenHarvest;
+        [Tooltip("How long the daily wave's banners stay up (seconds).")]
+        [Min(0.5f)] [SerializeField] private float _waveBannerSeconds = 3.5f;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -45,6 +47,8 @@ namespace RadiantOrchard.App
         private ZonesPresenter _zones;
         private QuizManager _quiz;
         private WisdomTreePresenter _treePresenter;
+        private DailyWave _dailyWave;
+        private DailyWaveAnnouncer _waveAnnouncer;
 
         private void Awake()
         {
@@ -79,6 +83,7 @@ namespace RadiantOrchard.App
             _quiz = new QuizManager(services.State, services.Config, services.Events, _boosts, services.Save.MarkDirty, new System.Random());
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty, services.Time, _boosts);
             _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
+            _dailyWave = new DailyWave(services.State, services.Config, services.Time, services.Events, _visitors, services.Save.MarkDirty);
             services.Clock.Ticked += TickVisitors;
             _delivery = new DeliveryService(services.State, services.Config, services.Events, _visitors, services.Save.MarkDirty);
             _plots.HarvestGate = _delivery.CanTake;
@@ -95,31 +100,48 @@ namespace RadiantOrchard.App
             _goldenHarvest.Init(services.Config, _boosts, services.Events);
             _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
                 _cameraController.GetComponent<Camera>(), services.Config);
-            // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
-            _visitors.ArriveAfterAway(services.LaunchTimeAway);
-            services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz, _dailyWave);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
             _quizPanel.Init(_quiz, services.Config);
             _banner.Init(services.Config.Strings);
+            _waveAnnouncer = new DailyWaveAnnouncer(_banner, services.Config.Strings, services.Events, _waveBannerSeconds);
             // After the zones presenter, so a zone is marked pending before its sequence looks at it.
             _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu, _quizPanel);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
                 _plots, _plantMenu, _quiz, _quizPanel, services.Config.Balance.SwipeSampleSpacing);
 
+            // Once every view is listening: a new day's wave first, so it gets the empty path; then visitors who came
+            // while the app was closed (or in the background) take any spots left.
+            ArriveAfterAway(services.LaunchTimeAway);
+            services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
+            services.Time.DevOffsetChanged += OnDevOffsetChanged;
+
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }
 
-        private void TickVisitors() => _visitors.Tick(_services.Clock.IntervalSeconds);
+        private void TickVisitors()
+        {
+            _visitors.Tick(_services.Clock.IntervalSeconds);
+            _dailyWave.Tick();
+        }
+
+        private void ArriveAfterAway(System.TimeSpan away)
+        {
+            _dailyWave.CheckNewDay();
+            _visitors.ArriveAfterAway(away);
+        }
+
+        // The dev panel's time skip can cross midnight; the wave follows it as it would a relaunch.
+        private void OnDevOffsetChanged(System.TimeSpan offset) => _dailyWave.CheckNewDay();
 
         private void TickBoosts() => _boosts.Tick(_services.Clock.IntervalSeconds);
 
-        private void OnTimeAway(TimeAwayApplied e) => _visitors.ArriveAfterAway(e.Elapsed);
+        private void OnTimeAway(TimeAwayApplied e) => ArriveAfterAway(e.Elapsed);
 
         private void OnDestroy()
         {
@@ -135,6 +157,7 @@ namespace RadiantOrchard.App
             {
                 _services.Clock.Ticked -= TickVisitors;
                 _services.Events.Unsubscribe<TimeAwayApplied>(OnTimeAway);
+                _services.Time.DevOffsetChanged -= OnDevOffsetChanged;
             }
             _plotsPresenter?.Dispose();
             _pointer?.Dispose();
@@ -143,6 +166,8 @@ namespace RadiantOrchard.App
             _delivery?.Dispose();
             _zones?.Dispose();
             _treePresenter?.Dispose();
+            _waveAnnouncer?.Dispose();
+            _dailyWave?.Dispose();
             _quiz?.Dispose();
             _vibrancy?.Dispose();
         }

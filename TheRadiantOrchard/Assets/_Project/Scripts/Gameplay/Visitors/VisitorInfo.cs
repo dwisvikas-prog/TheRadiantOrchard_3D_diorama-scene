@@ -17,11 +17,13 @@ namespace RadiantOrchard.Gameplay
         public readonly float PhaseElapsed;
         /// <summary>1 = full patience, 0 = run out. Full while walking in.</summary>
         public readonly float Patience;
+        /// <summary>How long their patience lasts on the path (the daily wave's visitors wait longer).</summary>
+        public readonly float PatienceSeconds;
         public readonly bool PatienceRanOut;
         /// <summary>A tonic is on its way to this visitor.</summary>
         public readonly bool Reserved;
 
-        public VisitorInfo(int id, string definitionId, string fruitId, string lineKey, int spot, int seat, VisitorPhase phase, float phaseElapsed, float patience, bool patienceRanOut, bool reserved)
+        public VisitorInfo(int id, string definitionId, string fruitId, string lineKey, int spot, int seat, VisitorPhase phase, float phaseElapsed, float patience, bool patienceRanOut, bool reserved, float patienceSeconds = 0f)
         {
             Id = id;
             DefinitionId = definitionId;
@@ -32,6 +34,7 @@ namespace RadiantOrchard.Gameplay
             Phase = phase;
             PhaseElapsed = phaseElapsed;
             Patience = patience;
+            PatienceSeconds = patienceSeconds;
             PatienceRanOut = patienceRanOut;
             Reserved = reserved;
         }

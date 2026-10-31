@@ -197,3 +197,11 @@ MonoBehaviour:
     _text: The Wisdom Tree asks
   - _key: ui.golden_harvest.timer
     _text: 'Golden Harvest {0}'
+  - _key: ui.wave.title
+    _text: Daily visitors!
+  - _key: ui.wave.body
+    _text: 'Heal all {0} for {1} bonus seeds'
+  - _key: ui.wave.done_title
+    _text: All healed!
+  - _key: ui.wave.done_body
+    _text: '+{0} bonus seeds'

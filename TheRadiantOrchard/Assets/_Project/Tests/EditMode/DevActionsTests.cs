@@ -54,7 +54,8 @@ namespace RadiantOrchard.Tests.EditMode
             var vibrancy = new VibrancyManager(state, _config, events, plots, _save.MarkDirty);
             var boosts = new BoostService(events);
             var quiz = new QuizManager(state, _config, events, boosts, _save.MarkDirty, new System.Random(1));
-            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz);
+            var wave = new DailyWave(state, _config, time, events, visitors, _save.MarkDirty);
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz, wave);
         }
 
         [Test]

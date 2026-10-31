@@ -177,7 +177,7 @@ namespace RadiantOrchard.Presentation
                         break;
                     case VisitorPhase.Waiting:
                         s.View.MoveTo(_farm.WaitingSpots[s.Spot].position);
-                        s.View.SetPatience(info.Reserved ? info.Patience : 1f - s.Elapsed / balance.PatienceSeconds);
+                        s.View.SetPatience(info.Reserved ? info.Patience : 1f - s.Elapsed / info.PatienceSeconds);
                         break;
                     case VisitorPhase.WalkingToBench:
                         s.View.MoveTo(RouteMath.PointAt(s.Route, s.RouteCount, s.Elapsed / balance.VisitorWalkToBenchSeconds));

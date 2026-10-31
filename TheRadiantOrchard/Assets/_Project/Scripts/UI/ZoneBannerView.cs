@@ -7,9 +7,10 @@ using UnityEngine;
 namespace RadiantOrchard.UI
 {
     /// <summary>
-    /// The banner of the zone unlock sequence (CLAUDE.md 5.7): "Stage N!" and what the stage opened (new fruits and
-    /// plots, or the zone / whole orchard restored). Pops in and fades out; the sequence decides how long it stays.
-    /// Update only runs the fade while it is changing.
+    /// The shared banner (UI-09). For the zone unlock sequence (CLAUDE.md 5.7): "Stage N!" and what the stage opened
+    /// (new fruits and plots, or the zone / whole orchard restored), shown until the sequence hides it. For other
+    /// announcements (the daily wave): any title and body for a set time. Pops in and fades out. Update only runs while
+    /// it is fading or timed.
     /// </summary>
     public sealed class ZoneBannerView : MonoBehaviour
     {
@@ -29,6 +30,8 @@ namespace RadiantOrchard.UI
         private StringTable _strings;
         private float _target;
         private float _alpha;
+        // Seconds until a timed banner hides itself; negative when the caller hides it.
+        private float _hideIn = -1f;
 
         public bool IsShowing => _root.activeSelf;
         public string Title => _title.text;
@@ -48,9 +51,24 @@ namespace RadiantOrchard.UI
             _body.text = BodyFor(unlocks, _strings);
             _root.SetActive(true);
             _target = 1f;
+            _hideIn = -1f;
         }
 
-        public void Hide() => _target = 0f;
+        /// <summary>Shows any announcement for this many seconds, then fades it out.</summary>
+        public void ShowText(string title, string body, float seconds)
+        {
+            _title.text = title;
+            _body.text = body;
+            _root.SetActive(true);
+            _target = 1f;
+            _hideIn = seconds;
+        }
+
+        public void Hide()
+        {
+            _target = 0f;
+            _hideIn = -1f;
+        }
 
         /// <summary>What the stage opened, one line per kind; the zone or whole orchard when nothing new can be planted.</summary>
         public static string BodyFor(StageUnlocks unlocks, StringTable strings)
@@ -77,6 +95,11 @@ namespace RadiantOrchard.UI
 
         private void Update()
         {
+            if (_hideIn >= 0f)
+            {
+                _hideIn -= Time.deltaTime;
+                if (_hideIn < 0f) _target = 0f;
+            }
             if (Mathf.Approximately(_alpha, _target)) return;
             _alpha = Mathf.MoveTowards(_alpha, _target, Time.deltaTime / Mathf.Max(0.01f, _fadeSeconds));
             Apply();
