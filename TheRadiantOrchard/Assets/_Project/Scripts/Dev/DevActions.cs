@@ -39,16 +39,15 @@ namespace RadiantOrchard.Dev
         }
 
         /// <summary>
-        /// Sets the vibrancy stage (clamped to 0..last stage) and opens its plots and fruits. Lowering the stage does not
-        /// close plots again. VibrancyManager (W2·10) takes this over with zones and the unlock sequence.
+        /// Sets the vibrancy stage (clamped to 0..last stage) through VibrancyManager: the heal count moves to that
+        /// stage's threshold so the meter matches; going up plays each stage reached (zones, plots, fruits); going down
+        /// greys the zones above again and keeps plots open.
         /// </summary>
         public static string SetStage(DevGame game, int stage)
         {
             if (game == null) return NotRunning;
-            game.State.VibrancyStage = Mathf.Clamp(stage, 0, game.Config.Balance.StageThresholds.Count);
-            game.Plots.ApplyStageUnlocks();
-            game.Save.MarkDirty();
-            return $"Stage {game.State.VibrancyStage}.";
+            game.Vibrancy.SetStage(stage);
+            return $"Stage {game.State.VibrancyStage}, {game.State.HealedTotal} healed.";
         }
 
         public static string RipenAll(DevGame game)

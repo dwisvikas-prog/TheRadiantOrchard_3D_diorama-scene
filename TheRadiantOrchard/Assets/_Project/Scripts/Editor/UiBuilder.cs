@@ -84,6 +84,7 @@ namespace RadiantOrchard.Editor
             hud.transform.SetAsFirstSibling();
             BasketView basket = BuildBasket(hud.transform, bold);
             ComboView combo = BuildCombo(hud.transform, bold);
+            VibrancyMeterView meter = BuildMeter(hud.transform, bold);
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -96,11 +97,12 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_hud").objectReferenceValue = hud;
             so.FindProperty("_basket").objectReferenceValue = basket;
             so.FindProperty("_combo").objectReferenceValue = combo;
+            so.FindProperty("_meter").objectReferenceValue = meter;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket and Combo wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket, Combo and Meter wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -235,13 +237,13 @@ namespace RadiantOrchard.Editor
             return basket;
         }
 
-        // Combo counter at the top centre; hidden until the second quick heal.
+        // Combo counter at the top centre under the meter; hidden until the second quick heal.
         private static ComboView BuildCombo(Transform hud, TMP_FontAsset bold)
         {
             var holder = Rect("Combo", hud);
             Stretch(holder);
             var pill = Rect("Pill", holder);
-            Anchor(pill, new Vector2(0.5f, 1f), new Vector2(300f, 76f), new Vector2(0f, -70f));
+            Anchor(pill, new Vector2(0.5f, 1f), new Vector2(300f, 76f), new Vector2(0f, -165f));
             var pillImage = pill.gameObject.AddComponent<Image>();
             pillImage.color = Accent;
             pillImage.raycastTarget = false;
@@ -256,6 +258,49 @@ namespace RadiantOrchard.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             pill.gameObject.SetActive(false);
             return combo;
+        }
+
+        // Vibrancy Meter at the top centre: stage label, a bar that fills towards the next stage, and the heal count.
+        private static VibrancyMeterView BuildMeter(Transform hud, TMP_FontAsset bold)
+        {
+            var pill = Rect("VibrancyMeter", hud);
+            Anchor(pill, new Vector2(0.5f, 1f), new Vector2(640f, 80f), new Vector2(0f, -70f));
+            var pillImage = pill.gameObject.AddComponent<Image>();
+            pillImage.color = Cream;
+            pillImage.raycastTarget = false;
+
+            TMP_Text stage = Text("Stage", pill, 34f, Ink, bold);
+            stage.textWrappingMode = TextWrappingModes.NoWrap;
+            Anchor(stage.rectTransform, new Vector2(0f, 0.5f), new Vector2(150f, 60f), new Vector2(100f, 0f));
+
+            var bar = Rect("Bar", pill);
+            Anchor(bar, new Vector2(0.5f, 0.5f), new Vector2(280f, 28f), new Vector2(-5f, 0f));
+            var barImage = bar.gameObject.AddComponent<Image>();
+            barImage.color = new Color(Ink.r, Ink.g, Ink.b, 0.18f);
+            barImage.raycastTarget = false;
+            var fill = Rect("Fill", bar);
+            fill.anchorMin = Vector2.zero;
+            fill.anchorMax = new Vector2(0f, 1f);
+            fill.offsetMin = Vector2.zero;
+            fill.offsetMax = Vector2.zero;
+            var fillImage = fill.gameObject.AddComponent<Image>();
+            fillImage.color = Accent;
+            fillImage.raycastTarget = false;
+
+            TMP_Text count = Text("Count", pill, 30f, Accent, bold);
+            count.textWrappingMode = TextWrappingModes.NoWrap;
+            count.enableAutoSizing = true;
+            count.fontSizeMin = 18f;
+            count.fontSizeMax = 30f;
+            Anchor(count.rectTransform, new Vector2(1f, 0.5f), new Vector2(160f, 60f), new Vector2(-95f, 0f));
+
+            var meter = pill.gameObject.AddComponent<VibrancyMeterView>();
+            var so = new SerializedObject(meter);
+            so.FindProperty("_stage").objectReferenceValue = stage;
+            so.FindProperty("_count").objectReferenceValue = count;
+            so.FindProperty("_fill").objectReferenceValue = fill;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return meter;
         }
 
         // Fixed preferred size for a child of a layout group.

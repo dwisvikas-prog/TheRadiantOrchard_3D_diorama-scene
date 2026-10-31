@@ -63,6 +63,7 @@ namespace RadiantOrchard.UI
             _root.SetActive(true);
             Refresh();
             _events.Subscribe<SeedsChanged>(OnSeedsChanged);
+            _events.Subscribe<StageReached>(OnStageReached);
         }
 
         public void Hide()
@@ -71,14 +72,20 @@ namespace RadiantOrchard.UI
             _root.SetActive(false);
             _plot = -1;
             _events.Unsubscribe<SeedsChanged>(OnSeedsChanged);
+            _events.Unsubscribe<StageReached>(OnStageReached);
         }
 
         private void OnDisable()
         {
-            if (_events != null) _events.Unsubscribe<SeedsChanged>(OnSeedsChanged);
+            if (_events == null) return;
+            _events.Unsubscribe<SeedsChanged>(OnSeedsChanged);
+            _events.Unsubscribe<StageReached>(OnStageReached);
         }
 
         private void OnSeedsChanged(SeedsChanged e) => Refresh();
+
+        // New fruits drop their padlocks while the menu is open.
+        private void OnStageReached(StageReached e) => Refresh();
 
         private void Refresh()
         {

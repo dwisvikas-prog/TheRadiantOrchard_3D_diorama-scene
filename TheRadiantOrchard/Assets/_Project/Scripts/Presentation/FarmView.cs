@@ -24,6 +24,8 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Tilemap[] _zones = new Tilemap[0];
         [Tooltip("Grey ↔ colour for each zone tilemap, zone 1 first (VibrancyManager colours them).")]
         [SerializeField] private Desaturation[] _zoneColours = new Desaturation[0];
+        [Tooltip("Seconds the colour takes to sweep over a zone when its stage is reached.")]
+        [Min(0f)] [SerializeField] private float _zoneSweepSeconds = 1.5f;
         [Tooltip("World area the camera may show: the farm plus its margin.")]
         [SerializeField] private Rect _worldBounds;
 
@@ -37,6 +39,7 @@ namespace RadiantOrchard.Presentation
         public Transform ExitPoint => _exitPoint;
         public IReadOnlyList<Tilemap> Zones => _zones;
         public IReadOnlyList<Desaturation> ZoneColours => _zoneColours;
+        public float ZoneSweepSeconds => _zoneSweepSeconds;
         public Rect WorldBounds => _worldBounds;
 
         private void Awake()

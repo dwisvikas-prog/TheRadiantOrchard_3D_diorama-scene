@@ -51,7 +51,8 @@ namespace RadiantOrchard.Tests.EditMode
             var heal = new HealService(state, _config, events, _save.MarkDirty);
             var visitors = new VisitorManager(state, _config, time, events, heal, _save.MarkDirty, new System.Random(1));
             var delivery = new DeliveryService(state, _config, events, visitors, _save.MarkDirty);
-            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, new BoostService(events));
+            var vibrancy = new VibrancyManager(state, _config, events, plots, _save.MarkDirty);
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, new BoostService(events), vibrancy);
         }
 
         [Test]
@@ -86,8 +87,11 @@ namespace RadiantOrchard.Tests.EditMode
             Assert.AreEqual(_config.Balance.StageThresholds.Count, _game.State.VibrancyStage);
             for (int i = 0; i < _game.Plots.Count; i++) Assert.IsTrue(_game.State.Plots[i].Unlocked, $"Plot {i + 1}");
 
+            Assert.AreEqual(700, _game.State.HealedTotal, "The heal count follows the stage.");
+
             DevActions.SetStage(_game, -3);
             Assert.AreEqual(0, _game.State.VibrancyStage);
+            Assert.AreEqual(0, _game.State.HealedTotal);
         }
 
         [Test]

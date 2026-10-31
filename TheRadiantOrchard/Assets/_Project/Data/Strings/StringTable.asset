@@ -159,3 +159,9 @@ MonoBehaviour:
     _text: '+{0}'
   - _key: ui.combo
     _text: "Combo ×{0}"
+  - _key: ui.vibrancy.stage
+    _text: 'Stage {0}'
+  - _key: ui.vibrancy.progress
+    _text: '{0}/{1}'
+  - _key: ui.vibrancy.complete
+    _text: Farm restored

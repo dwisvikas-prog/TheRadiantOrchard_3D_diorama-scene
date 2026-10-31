@@ -25,6 +25,7 @@ namespace RadiantOrchard.App
         [SerializeField] private HudView _hud;
         [SerializeField] private BasketView _basket;
         [SerializeField] private ComboView _combo;
+        [SerializeField] private VibrancyMeterView _meter;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -36,6 +37,8 @@ namespace RadiantOrchard.App
         private VisitorManager _visitors;
         private DeliveryService _delivery;
         private HarvestDelivery _deliveryViews;
+        private VibrancyManager _vibrancy;
+        private ZonesPresenter _zones;
 
         private void Awake()
         {
@@ -48,9 +51,9 @@ namespace RadiantOrchard.App
             }
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
-                || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null)
+                || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null || _meter == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket and Combo must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo and Meter must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -59,7 +62,8 @@ namespace RadiantOrchard.App
             _cameraController.Init(services.Config.Balance);
 
             _plots = new PlotManager(services.State, services.Config, services.Time, services.Events, services.Save.MarkDirty);
-            _plots.ApplyStageUnlocks();
+            // Before the plot views: a save that is ahead of its stage opens its plots first.
+            _vibrancy = new VibrancyManager(services.State, services.Config, services.Events, _plots, services.Save.MarkDirty);
             _plotsPresenter = new PlotsPresenter(_farmView.Plots, _plots, services.Config, services.Events);
             services.Clock.Ticked += _plots.Tick;
             services.Clock.Ticked += _plotsPresenter.Tick;
@@ -77,6 +81,8 @@ namespace RadiantOrchard.App
             _hud.Init(services.State, services.Events, services.Config.Strings);
             _basket.Init(services.Config, services.State, services.Events);
             _combo.Init(services.Config, services.Events);
+            _meter.Init(services.Config, services.State, services.Events);
+            _zones = new ZonesPresenter(_farmView, services.State, services.Events);
             _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
                 _cameraController.GetComponent<Camera>(), services.Config);
             // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
@@ -84,7 +90,7 @@ namespace RadiantOrchard.App
             services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
@@ -121,6 +127,8 @@ namespace RadiantOrchard.App
             _healPresenter?.Dispose();
             _deliveryViews?.Dispose();
             _delivery?.Dispose();
+            _zones?.Dispose();
+            _vibrancy?.Dispose();
         }
     }
 }
