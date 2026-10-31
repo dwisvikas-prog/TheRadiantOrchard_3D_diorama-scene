@@ -52,7 +52,9 @@ namespace RadiantOrchard.Tests.EditMode
             var visitors = new VisitorManager(state, _config, time, events, heal, _save.MarkDirty, new System.Random(1));
             var delivery = new DeliveryService(state, _config, events, visitors, _save.MarkDirty);
             var vibrancy = new VibrancyManager(state, _config, events, plots, _save.MarkDirty);
-            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, new BoostService(events), vibrancy);
+            var boosts = new BoostService(events);
+            var quiz = new QuizManager(state, _config, events, boosts, _save.MarkDirty, new System.Random(1));
+            _game = new DevGame(_config, state, time, events, _save, plots, heal, visitors, delivery, boosts, vibrancy, quiz);
         }
 
         [Test]

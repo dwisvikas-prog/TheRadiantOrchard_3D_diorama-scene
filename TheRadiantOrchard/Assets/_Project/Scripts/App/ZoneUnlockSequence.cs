@@ -12,7 +12,8 @@ namespace RadiantOrchard.App
     /// <summary>
     /// The zone unlock "wow" (CLAUDE.md 5.7, FX-11): for every stage reached in play the camera glides to the zone,
     /// colour washes over it with petals (and the sting hook, ZoneWaveStarted), a banner names what opened, and the
-    /// camera glides back to where the player was. Touch input is locked throughout; the game itself keeps running.
+    /// camera glides back to where the player was. Touch input is locked throughout and open panels close (a waiting quiz
+    /// stays waiting); the game itself keeps running.
     /// Stages reached together play one after another. Lives in App because it joins camera, input, zones and UI.
     /// Feel numbers are on the component.
     /// </summary>
@@ -35,6 +36,7 @@ namespace RadiantOrchard.App
         private ZonesPresenter _zones;
         private ZoneBannerView _banner;
         private PlantMenuView _plantMenu;
+        private QuizPanelView _quizPanel;
         private Coroutine _running;
         private bool _subscribed;
 
@@ -46,7 +48,7 @@ namespace RadiantOrchard.App
         public float ReturnSeconds => _returnSeconds;
 
         public void Init(GameConfig config, EventBus events, CameraController cameraController, GestureRecognizer gestures,
-            ZonesPresenter zones, ZoneBannerView banner, PlantMenuView plantMenu)
+            ZonesPresenter zones, ZoneBannerView banner, PlantMenuView plantMenu, QuizPanelView quizPanel)
         {
             _config = config;
             _events = events;
@@ -55,6 +57,7 @@ namespace RadiantOrchard.App
             _zones = zones;
             _banner = banner;
             _plantMenu = plantMenu;
+            _quizPanel = quizPanel;
             Subscribe();
         }
 
@@ -121,7 +124,9 @@ namespace RadiantOrchard.App
         {
             _gestures.Locked = locked;
             _camera.Locked = locked;
-            if (locked && _plantMenu.IsOpen) _plantMenu.Hide();
+            if (!locked) return;
+            if (_plantMenu.IsOpen) _plantMenu.Hide();
+            if (_quizPanel.IsOpen) _quizPanel.Hide();
         }
 
         private void Subscribe()

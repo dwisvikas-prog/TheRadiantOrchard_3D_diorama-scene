@@ -15,6 +15,7 @@ namespace RadiantOrchard.Presentation
         [Tooltip("Plot roots in unlock order (same order as FarmDefinition.PlotCells).")]
         [SerializeField] private PlotView[] _plots = new PlotView[0];
         [SerializeField] private Transform _wisdomTree;
+        [SerializeField] private WisdomTreeView _wisdomTreeView;
         [SerializeField] private Transform _well;
         [SerializeField] private Transform _bench;
         [SerializeField] private Transform _spawnPoint;
@@ -32,6 +33,7 @@ namespace RadiantOrchard.Presentation
         public Grid Grid => _grid;
         public IReadOnlyList<PlotView> Plots => _plots;
         public Transform WisdomTree => _wisdomTree;
+        public WisdomTreeView WisdomTreeView => _wisdomTreeView;
         public Transform Well => _well;
         public Transform Bench => _bench;
         public Transform SpawnPoint => _spawnPoint;
@@ -44,7 +46,7 @@ namespace RadiantOrchard.Presentation
 
         private void Awake()
         {
-            if (_grid == null || _wisdomTree == null || _well == null || _bench == null || _spawnPoint == null || _exitPoint == null)
+            if (_grid == null || _wisdomTree == null || _wisdomTreeView == null || _well == null || _bench == null || _spawnPoint == null || _exitPoint == null)
                 Log.Error($"FarmView '{name}': a scene reference is missing; rebuild the farm (Radiant Orchard > Setup > Build Placeholder Farm).", this);
         }
 

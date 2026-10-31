@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7bce6b4165c4fe4eb22e4f9bc4872c8, type: 3}
+  m_Name: QuizSet
+  m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.QuizSet
+  _scenarios:
+  - _id: love
+    _virtue: {fileID: 11400000, guid: 13d3534fa2ed37646b6b5370b4b472bf, type: 2}
+    _scenarioKey: quiz.love.scenario
+    _hintKey: quiz.love.hint
+    _options:
+    - {fileID: 11400000, guid: 1bcb6560e5cfbb548b6580541a006318, type: 2}
+    - {fileID: 11400000, guid: aafd6bbdf4b41664abeee4013213bde6, type: 2}
+    - {fileID: 11400000, guid: 3c6736e5f5a53c5468b18e9b659a7853, type: 2}
+    _correctIndex: 0
+  - _id: joy
+    _virtue: {fileID: 11400000, guid: f0941c8fbae91924ab736f887e863034, type: 2}
+    _scenarioKey: quiz.joy.scenario
+    _hintKey: quiz.joy.hint
+    _options:
+    - {fileID: 11400000, guid: 3efe066d847c94945bfa67f4f62a97d3, type: 2}
+    - {fileID: 11400000, guid: 3af4cd80283af2e41be98d228263507f, type: 2}
+    - {fileID: 11400000, guid: aac5d3d3be96d684eafc133e5f93382a, type: 2}
+    _correctIndex: 1
+  - _id: peace
+    _virtue: {fileID: 11400000, guid: 45b36f09b4c054a46a1a94b5632b27ee, type: 2}
+    _scenarioKey: quiz.peace.scenario
+    _hintKey: quiz.peace.hint
+    _options:
+    - {fileID: 11400000, guid: afb2cdb6deaf09b4fb54d70e3a78324f, type: 2}
+    - {fileID: 11400000, guid: ecafd1b912dcbe74580e356961f9c488, type: 2}
+    - {fileID: 11400000, guid: 7c2583be8b8e84647a35d14c4b320072, type: 2}
+    _correctIndex: 2
+  - _id: patience
+    _virtue: {fileID: 11400000, guid: fb36d622f4c562d42bb21ea0d583e6a8, type: 2}
+    _scenarioKey: quiz.patience.scenario
+    _hintKey: quiz.patience.hint
+    _options:
+    - {fileID: 11400000, guid: aafd6bbdf4b41664abeee4013213bde6, type: 2}
+    - {fileID: 11400000, guid: 3c6736e5f5a53c5468b18e9b659a7853, type: 2}
+    - {fileID: 11400000, guid: 1bcb6560e5cfbb548b6580541a006318, type: 2}
+    _correctIndex: 0
+  - _id: meekness
+    _virtue: {fileID: 11400000, guid: 2add8ce9ecfc27444a7e9648e525ad0c, type: 2}
+    _scenarioKey: quiz.meekness.scenario
+    _hintKey: quiz.meekness.hint
+    _options:
+    - {fileID: 11400000, guid: aac5d3d3be96d684eafc133e5f93382a, type: 2}
+    - {fileID: 11400000, guid: 3efe066d847c94945bfa67f4f62a97d3, type: 2}
+    - {fileID: 11400000, guid: 3af4cd80283af2e41be98d228263507f, type: 2}
+    _correctIndex: 1
+  - _id: self_control
+    _virtue: {fileID: 11400000, guid: c489f3c252582c342ae77000407e5ae4, type: 2}
+    _scenarioKey: quiz.self_control.scenario
+    _hintKey: quiz.self_control.hint
+    _options:
+    - {fileID: 11400000, guid: ecafd1b912dcbe74580e356961f9c488, type: 2}
+    - {fileID: 11400000, guid: 7c2583be8b8e84647a35d14c4b320072, type: 2}
+    - {fileID: 11400000, guid: afb2cdb6deaf09b4fb54d70e3a78324f, type: 2}
+    _correctIndex: 2
+  - _id: kindness
+    _virtue: {fileID: 11400000, guid: 550d0f7aafcc2b14688219a29b5bdf8c, type: 2}
+    _scenarioKey: quiz.kindness.scenario
+    _hintKey: quiz.kindness.hint
+    _options:
+    - {fileID: 11400000, guid: 3c6736e5f5a53c5468b18e9b659a7853, type: 2}
+    - {fileID: 11400000, guid: 1bcb6560e5cfbb548b6580541a006318, type: 2}
+    - {fileID: 11400000, guid: aafd6bbdf4b41664abeee4013213bde6, type: 2}
+    _correctIndex: 0
+  - _id: goodness
+    _virtue: {fileID: 11400000, guid: 00c15cccd53c9c340afe94bef1b58770, type: 2}
+    _scenarioKey: quiz.goodness.scenario
+    _hintKey: quiz.goodness.hint
+    _options:
+    - {fileID: 11400000, guid: 3af4cd80283af2e41be98d228263507f, type: 2}
+    - {fileID: 11400000, guid: aac5d3d3be96d684eafc133e5f93382a, type: 2}
+    - {fileID: 11400000, guid: 3efe066d847c94945bfa67f4f62a97d3, type: 2}
+    _correctIndex: 1
+  - _id: faithfulness
+    _virtue: {fileID: 11400000, guid: b05f2844ccbff3e43bfccb6bffbf19a5, type: 2}
+    _scenarioKey: quiz.faithfulness.scenario
+    _hintKey: quiz.faithfulness.hint
+    _options:
+    - {fileID: 11400000, guid: 7c2583be8b8e84647a35d14c4b320072, type: 2}
+    - {fileID: 11400000, guid: afb2cdb6deaf09b4fb54d70e3a78324f, type: 2}
+    - {fileID: 11400000, guid: ecafd1b912dcbe74580e356961f9c488, type: 2}
+    _correctIndex: 2

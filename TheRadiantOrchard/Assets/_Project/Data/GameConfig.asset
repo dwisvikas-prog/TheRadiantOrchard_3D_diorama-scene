@@ -37,3 +37,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b05f2844ccbff3e43bfccb6bffbf19a5, type: 2}
   _visitors:
   - {fileID: 11400000, guid: 3cb3a4d8acafeab49987e89313efd0a0, type: 2}
+  _quiz: {fileID: 11400000, guid: 803142d754d5e2f4dbd80161fe7bfe57, type: 2}

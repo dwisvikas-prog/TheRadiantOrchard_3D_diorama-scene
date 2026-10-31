@@ -25,6 +25,8 @@ namespace RadiantOrchard.Editor
         private const string FarmAssetPath = FarmFolder + "/FarmDefinition.asset";
         private const string PlaceholderFolder = "Assets/_Project/Art/Sprites/Placeholders";
         private const string PlotSpritePath = "Assets/_Project/Art/Sprites/Plots/plot_empty.png";
+        private const string SoftDotPath = "Assets/_Project/Art/Sprites/Placeholders/ph_soft_dot.png";
+        private const string UnlitSpriteMaterialPath = "Packages/com.unity.render-pipelines.universal/Runtime/Materials/Sprite-Unlit-Default.mat";
         private const string TimerFontPath = "Assets/_Project/Art/Fonts/Fredoka-Bold SDF.asset";
         private const string Renderer2DPath = "Assets/_Project/Settings/Renderer2D.asset";
         private const string RootName = "FarmGrid";
@@ -97,6 +99,8 @@ namespace RadiantOrchard.Editor
 
             Transform landmarks = Child(rootGo.transform, "Landmarks");
             Transform tree = Landmark(landmarks, grid, farm.WisdomTreeCell, "WisdomTree", blockSprite, new Vector2(1.8f, 6f), Hex("#6E8B5A"), "Wisdom Tree");
+            WisdomTreeView treeView = AddTreeGlow(tree, new Vector2(1.8f, 6f));
+            if (treeView == null) return;
             Transform well = Landmark(landmarks, grid, farm.WellCell, "StoneWell", blockSprite, new Vector2(1.6f, 1.4f), Hex("#9AA39A"), "Stone Well");
             Transform bench = Landmark(landmarks, grid, farm.BenchCell, "Bench", blockSprite, new Vector2(2.6f, 0.6f), Hex("#8A5A35"), "Bench (3 seats)");
 
@@ -111,6 +115,7 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_grid").objectReferenceValue = grid;
             SetArray(so.FindProperty("_plots"), plots);
             so.FindProperty("_wisdomTree").objectReferenceValue = tree;
+            so.FindProperty("_wisdomTreeView").objectReferenceValue = treeView;
             so.FindProperty("_well").objectReferenceValue = well;
             so.FindProperty("_bench").objectReferenceValue = bench;
             so.FindProperty("_spawnPoint").objectReferenceValue = spawn;
@@ -261,6 +266,38 @@ namespace RadiantOrchard.Editor
             sr.sprite = sprite;
             sr.sortingOrder = order;
             return sr;
+        }
+
+        // The gold glow behind the Wisdom Tree while a quiz waits (CLAUDE.md 5.8): a soft dot stretched around the trunk.
+        private static WisdomTreeView AddTreeGlow(Transform tree, Vector2 treeSizeWorld)
+        {
+            var dot = AssetDatabase.LoadAssetAtPath<Sprite>(SoftDotPath);
+            var unlit = AssetDatabase.LoadAssetAtPath<Material>(UnlitSpriteMaterialPath);
+            if (dot == null || unlit == null)
+            {
+                Debug.LogError($"FarmLayoutBuilder: missing {SoftDotPath} (run Build Tonic) or {UnlitSpriteMaterialPath}.");
+                return null;
+            }
+
+            var glowGo = new GameObject("QuizGlow");
+            glowGo.transform.SetParent(tree, false);
+            glowGo.transform.localPosition = new Vector3(0f, treeSizeWorld.y * 0.5f, 0f);
+            Vector2 dotSize = dot.bounds.size;
+            glowGo.transform.localScale = new Vector3(treeSizeWorld.x * 2.2f / dotSize.x, treeSizeWorld.y * 1.25f / dotSize.y, 1f);
+            var glow = glowGo.AddComponent<SpriteRenderer>();
+            glow.sprite = dot;
+            glow.sharedMaterial = unlit;
+            glow.color = new Color(1f, 0.84f, 0.35f, 0.6f);
+            // Behind the trunk inside the tree's Sorting Group; off until a quiz waits.
+            glow.sortingOrder = -1;
+            glow.enabled = false;
+
+            var view = tree.gameObject.AddComponent<WisdomTreeView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("_body").objectReferenceValue = tree.Find("PlaceholderBody").GetComponent<SpriteRenderer>();
+            so.FindProperty("_glow").objectReferenceValue = glow;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return view;
         }
 
         private static Transform Landmark(Transform parent, Grid grid, Vector2Int cell, string name, Sprite block, Vector2 sizeWorld, Color colour, string label)

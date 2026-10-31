@@ -22,6 +22,10 @@ namespace RadiantOrchard.Editor
         private const string GameScenePath = "Assets/_Project/Scenes/Game.unity";
         private const string PrefabFolder = "Assets/_Project/Prefabs/UI";
         private const string PlantMenuPrefabPath = PrefabFolder + "/PlantMenu.prefab";
+        private const string QuizPanelPrefabPath = PrefabFolder + "/QuizPanel.prefab";
+        private const string EdgeGlowPath = "Assets/_Project/Art/Sprites/Placeholders/ph_edge_glow.png";
+        // Width of the glow's soft border in the sprite, in pixels.
+        private const int EdgeGlowBorder = 48;
         private const string BoldFontPath = "Assets/_Project/Art/Fonts/Fredoka-Bold SDF.asset";
         private const string CanvasName = "UI";
 
@@ -74,6 +78,10 @@ namespace RadiantOrchard.Editor
             scaler.matchWidthOrHeight = 0.5f;
 
             EnsureFolder(PrefabFolder);
+            EnsureEdgeGlowSprite();
+            // Opening a scene unloads unused assets, so load these after it.
+            var edgeGlow = AssetDatabase.LoadAssetAtPath<Sprite>(EdgeGlowPath);
+            bold = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BoldFontPath);
             GameObject menuSource = BuildPlantMenu(bold);
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(menuSource, PlantMenuPrefabPath);
             Object.DestroyImmediate(menuSource);
@@ -86,6 +94,15 @@ namespace RadiantOrchard.Editor
             ComboView combo = BuildCombo(hud.transform, bold);
             VibrancyMeterView meter = BuildMeter(hud.transform, bold);
             ZoneBannerView banner = BuildBanner(hud.transform, bold);
+            // Under the HUD (the pills stay readable) and the panels: the gold edge glow and its timer.
+            GoldenHarvestView goldenHarvest = BuildGoldenHarvest(canvasGo.transform, bold, edgeGlow);
+            goldenHarvest.transform.SetAsFirstSibling();
+
+            GameObject quizSource = BuildQuizPanel(bold);
+            GameObject quizPrefab = PrefabUtility.SaveAsPrefabAsset(quizSource, QuizPanelPrefabPath);
+            Object.DestroyImmediate(quizSource);
+            var quiz = (GameObject)PrefabUtility.InstantiatePrefab(quizPrefab, canvasGo.transform);
+            Stretch(quiz.GetComponent<RectTransform>());
 
             // Components whose script was deleted (TapDetector, replaced by GestureRecognizer in W1·19).
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(camera.gameObject);
@@ -100,11 +117,13 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_combo").objectReferenceValue = combo;
             so.FindProperty("_meter").objectReferenceValue = meter;
             so.FindProperty("_banner").objectReferenceValue = banner;
+            so.FindProperty("_quizPanel").objectReferenceValue = quiz.GetComponent<QuizPanelView>();
+            so.FindProperty("_goldenHarvest").objectReferenceValue = goldenHarvest;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             EditorSceneManager.MarkSceneDirty(game);
             EditorSceneManager.SaveScene(game);
-            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter, zone banner) and PlantMenu prefab built; GestureRecognizer, PlantMenu, HUD, Basket, Combo, Meter and Banner wired into the GameInstaller.");
+            Debug.Log("UiBuilder: EventSystem, Canvas, HUD (seeds, basket, combo, vibrancy meter, zone banner, Golden Harvest), PlantMenu and QuizPanel prefabs built; GestureRecognizer, PlantMenu, HUD, Basket, Combo, Meter, Banner, QuizPanel and Golden Harvest wired into the GameInstaller.");
         }
 
         private static GameObject BuildPlantMenu(TMP_FontAsset bold)
@@ -344,6 +363,171 @@ namespace RadiantOrchard.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             panel.gameObject.SetActive(false);
             return banner;
+        }
+
+        // The Wisdom Tree's bottom sheet (CLAUDE.md 5.8): scenario, three fruit choices, hint line, close button.
+        private static GameObject BuildQuizPanel(TMP_FontAsset bold)
+        {
+            var quiz = new GameObject("QuizPanel", typeof(RectTransform), typeof(QuizPanelView));
+            var root = Rect("Root", quiz.transform);
+            Stretch(root);
+
+            var backdrop = Rect("Backdrop", root);
+            Stretch(backdrop);
+            backdrop.gameObject.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.35f);
+            var backdropButton = backdrop.gameObject.AddComponent<Button>();
+            backdropButton.transition = Selectable.Transition.None;
+
+            var safe = Rect("Safe", root);
+            Stretch(safe);
+            safe.gameObject.AddComponent<SafeArea>();
+            var sheet = Rect("Sheet", safe);
+            sheet.anchorMin = sheet.anchorMax = new Vector2(0.5f, 0f);
+            sheet.pivot = new Vector2(0.5f, 0f);
+            sheet.sizeDelta = new Vector2(1400f, 560f);
+            sheet.anchoredPosition = new Vector2(0f, 0f);
+            sheet.gameObject.AddComponent<Image>().color = Cream;
+
+            TMP_Text title = Text("Title", sheet, 44f, Accent, bold);
+            Anchor(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(900f, 70f), new Vector2(0f, -50f));
+            TMP_Text scenario = Text("Scenario", sheet, 38f, Ink, bold);
+            scenario.enableAutoSizing = true;
+            scenario.fontSizeMin = 26f;
+            scenario.fontSizeMax = 38f;
+            Anchor(scenario.rectTransform, new Vector2(0.5f, 1f), new Vector2(1280f, 130f), new Vector2(0f, -155f));
+
+            var close = Rect("Close", sheet);
+            Anchor(close, new Vector2(1f, 1f), new Vector2(180f, 70f), new Vector2(-110f, -50f));
+            close.gameObject.AddComponent<Image>().color = Accent;
+            var closeButton = close.gameObject.AddComponent<Button>();
+            TMP_Text closeLabel = Text("Label", close, 30f, Color.white, bold);
+            Stretch(closeLabel.rectTransform);
+
+            var buttons = new Button[3];
+            var icons = new Image[3];
+            var names = new TMP_Text[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var option = Rect("Option_" + (i + 1), sheet);
+                Anchor(option, new Vector2(0.5f, 0f), new Vector2(420f, 160f), new Vector2((i - 1) * 440f, 175f));
+                option.gameObject.AddComponent<Image>().color = Color.white;
+                buttons[i] = option.gameObject.AddComponent<Button>();
+                var icon = Rect("Icon", option);
+                Anchor(icon, new Vector2(0f, 0.5f), new Vector2(110f, 110f), new Vector2(80f, 0f));
+                icons[i] = icon.gameObject.AddComponent<Image>();
+                icons[i].raycastTarget = false;
+                names[i] = Text("Name", option, 38f, Ink, bold);
+                names[i].alignment = TextAlignmentOptions.Left;
+                names[i].enableAutoSizing = true;
+                names[i].fontSizeMin = 24f;
+                names[i].fontSizeMax = 38f;
+                Anchor(names[i].rectTransform, new Vector2(0f, 0.5f), new Vector2(250f, 80f), new Vector2(285f, 0f));
+            }
+
+            TMP_Text hint = Text("Hint", sheet, 32f, Accent, bold);
+            hint.enableAutoSizing = true;
+            hint.fontSizeMin = 22f;
+            hint.fontSizeMax = 32f;
+            Anchor(hint.rectTransform, new Vector2(0.5f, 0f), new Vector2(1280f, 70f), new Vector2(0f, 50f));
+            hint.gameObject.SetActive(false);
+
+            var view = quiz.GetComponent<QuizPanelView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("_root").objectReferenceValue = root.gameObject;
+            so.FindProperty("_title").objectReferenceValue = title;
+            so.FindProperty("_scenario").objectReferenceValue = scenario;
+            so.FindProperty("_hint").objectReferenceValue = hint;
+            so.FindProperty("_close").objectReferenceValue = closeButton;
+            so.FindProperty("_closeLabel").objectReferenceValue = closeLabel;
+            so.FindProperty("_backdrop").objectReferenceValue = backdropButton;
+            SetArray(so.FindProperty("_optionButtons"), buttons);
+            SetArray(so.FindProperty("_optionIcons"), icons);
+            SetArray(so.FindProperty("_optionNames"), names);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return quiz;
+        }
+
+        // Golden Harvest (5.8, FX-12 placeholder): a gold glow around the whole screen (a sliced sprite with no centre)
+        // and a timer pill in the safe area. Its own Canvas, so the pulse does not rebuild the HUD.
+        private static GoldenHarvestView BuildGoldenHarvest(Transform canvas, TMP_FontAsset bold, Sprite edgeGlow)
+        {
+            var holder = Rect("GoldenHarvest", canvas);
+            Stretch(holder);
+            holder.gameObject.AddComponent<Canvas>();
+            var root = Rect("Root", holder);
+            Stretch(root);
+
+            var glowRt = Rect("EdgeGlow", root);
+            Stretch(glowRt);
+            var glow = glowRt.gameObject.AddComponent<Image>();
+            glow.sprite = edgeGlow;
+            glow.type = Image.Type.Sliced;
+            glow.fillCenter = false;
+            // The border shows about 110 canvas units wide.
+            glow.pixelsPerUnitMultiplier = EdgeGlowBorder / 110f;
+            glow.color = new Color(1f, 0.82f, 0.35f, 1f);
+            glow.raycastTarget = false;
+            var glowGroup = glowRt.gameObject.AddComponent<CanvasGroup>();
+            glowGroup.interactable = false;
+            glowGroup.blocksRaycasts = false;
+
+            var safe = Rect("Safe", root);
+            Stretch(safe);
+            safe.gameObject.AddComponent<SafeArea>();
+            var pill = Rect("TimerPill", safe);
+            Anchor(pill, new Vector2(0.5f, 1f), new Vector2(420f, 72f), new Vector2(0f, -255f));
+            var pillImage = pill.gameObject.AddComponent<Image>();
+            pillImage.color = new Color(0.86f, 0.62f, 0.12f, 1f);
+            pillImage.raycastTarget = false;
+            TMP_Text timer = Text("Timer", pill, 34f, Color.white, bold);
+            timer.textWrappingMode = TextWrappingModes.NoWrap;
+            Stretch(timer.rectTransform);
+
+            var view = holder.gameObject.AddComponent<GoldenHarvestView>();
+            var so = new SerializedObject(view);
+            so.FindProperty("_root").objectReferenceValue = root.gameObject;
+            so.FindProperty("_glow").objectReferenceValue = glowGroup;
+            so.FindProperty("_timer").objectReferenceValue = timer;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            root.gameObject.SetActive(false);
+            return view;
+        }
+
+        // A square that is warm gold at its edges and fades to clear within EdgeGlowBorder pixels; sliced, centre unused.
+        private static void EnsureEdgeGlowSprite()
+        {
+            if (AssetDatabase.LoadAssetAtPath<Sprite>(EdgeGlowPath) != null) return;
+
+            const int size = 128;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float d = Mathf.Min(Mathf.Min(x, size - 1 - x), Mathf.Min(y, size - 1 - y));
+                    float a = Mathf.Clamp01(1f - d / EdgeGlowBorder);
+                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, a * a));
+                }
+            }
+            System.IO.File.WriteAllBytes(EdgeGlowPath, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(EdgeGlowPath);
+
+            var importer = (TextureImporter)AssetImporter.GetAtPath(EdgeGlowPath);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 100f;
+            importer.spriteBorder = new Vector4(EdgeGlowBorder, EdgeGlowBorder, EdgeGlowBorder, EdgeGlowBorder);
+            importer.mipmapEnabled = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.alphaIsTransparency = true;
+            importer.SaveAndReimport();
+        }
+
+        private static void SetArray<T>(SerializedProperty array, T[] items) where T : Object
+        {
+            array.arraySize = items.Length;
+            for (int i = 0; i < items.Length; i++) array.GetArrayElementAtIndex(i).objectReferenceValue = items[i];
         }
 
         // Fixed preferred size for a child of a layout group.

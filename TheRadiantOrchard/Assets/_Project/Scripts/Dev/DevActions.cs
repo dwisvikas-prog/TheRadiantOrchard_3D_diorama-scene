@@ -76,6 +76,15 @@ namespace RadiantOrchard.Dev
             return $"Golden Harvest: x{b.GoldenHarvestSeedMultiplier} seeds for {b.GoldenHarvestSeconds:0} s.";
         }
 
+        /// <summary>Makes a Wisdom Tree quiz ready now (CLAUDE.md 5.8): the tree glows; tap it to answer.</summary>
+        public static string QuizNow(DevGame game)
+        {
+            if (game == null) return NotRunning;
+            if (!game.Quiz.HasQuestions) return "No quiz questions in GameConfig.";
+            game.Quiz.MakeReady();
+            return "Quiz ready: tap the Wisdom Tree.";
+        }
+
         /// <summary>Heals count visitors through the real heal path (seeds, counters, events, save).</summary>
         public static string Heal(DevGame game, int count)
         {

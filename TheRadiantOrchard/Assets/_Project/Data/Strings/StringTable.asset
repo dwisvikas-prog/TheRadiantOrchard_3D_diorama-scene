@@ -67,6 +67,8 @@ MonoBehaviour:
     _text: '[Placeholder] Love situation line 3'
   - _key: quiz.love.scenario
     _text: '[Placeholder] Love quiz scenario'
+  - _key: quiz.love.hint
+    _text: '[Placeholder] Love hint'
   - _key: situation.joy.1
     _text: '[Placeholder] Joy situation line 1'
   - _key: situation.joy.2
@@ -75,6 +77,8 @@ MonoBehaviour:
     _text: '[Placeholder] Joy situation line 3'
   - _key: quiz.joy.scenario
     _text: '[Placeholder] Joy quiz scenario'
+  - _key: quiz.joy.hint
+    _text: '[Placeholder] Joy hint'
   - _key: situation.peace.1
     _text: "I can't stop worrying\u2026"
   - _key: situation.peace.2
@@ -83,6 +87,8 @@ MonoBehaviour:
     _text: '[Placeholder] Peace situation line 3'
   - _key: quiz.peace.scenario
     _text: Your friend is anxious about an exam tomorrow. What do they need most?
+  - _key: quiz.peace.hint
+    _text: '[Placeholder] Peace hint'
   - _key: situation.patience.1
     _text: '[Placeholder] Patience situation line 1'
   - _key: situation.patience.2
@@ -91,6 +97,8 @@ MonoBehaviour:
     _text: '[Placeholder] Patience situation line 3'
   - _key: quiz.patience.scenario
     _text: '[Placeholder] Patience quiz scenario'
+  - _key: quiz.patience.hint
+    _text: '[Placeholder] Patience hint'
   - _key: situation.meekness.1
     _text: '[Placeholder] Meekness situation line 1'
   - _key: situation.meekness.2
@@ -99,6 +107,8 @@ MonoBehaviour:
     _text: '[Placeholder] Meekness situation line 3'
   - _key: quiz.meekness.scenario
     _text: '[Placeholder] Meekness quiz scenario'
+  - _key: quiz.meekness.hint
+    _text: '[Placeholder] Meekness hint'
   - _key: situation.self_control.1
     _text: '[Placeholder] Self-Control situation line 1'
   - _key: situation.self_control.2
@@ -107,6 +117,8 @@ MonoBehaviour:
     _text: '[Placeholder] Self-Control situation line 3'
   - _key: quiz.self_control.scenario
     _text: '[Placeholder] Self-Control quiz scenario'
+  - _key: quiz.self_control.hint
+    _text: '[Placeholder] Self-Control hint'
   - _key: situation.kindness.1
     _text: '[Placeholder] Kindness situation line 1'
   - _key: situation.kindness.2
@@ -115,6 +127,8 @@ MonoBehaviour:
     _text: '[Placeholder] Kindness situation line 3'
   - _key: quiz.kindness.scenario
     _text: '[Placeholder] Kindness quiz scenario'
+  - _key: quiz.kindness.hint
+    _text: '[Placeholder] Kindness hint'
   - _key: situation.goodness.1
     _text: '[Placeholder] Goodness situation line 1'
   - _key: situation.goodness.2
@@ -123,6 +137,8 @@ MonoBehaviour:
     _text: '[Placeholder] Goodness situation line 3'
   - _key: quiz.goodness.scenario
     _text: '[Placeholder] Goodness quiz scenario'
+  - _key: quiz.goodness.hint
+    _text: '[Placeholder] Goodness hint'
   - _key: situation.faithfulness.1
     _text: '[Placeholder] Faithfulness situation line 1'
   - _key: situation.faithfulness.2
@@ -131,6 +147,8 @@ MonoBehaviour:
     _text: '[Placeholder] Faithfulness situation line 3'
   - _key: quiz.faithfulness.scenario
     _text: '[Placeholder] Faithfulness quiz scenario'
+  - _key: quiz.faithfulness.hint
+    _text: '[Placeholder] Faithfulness hint'
   - _key: ui.plant.title
     _text: Plant a tree
   - _key: ui.plant.seeds
@@ -175,3 +193,7 @@ MonoBehaviour:
     _text: A new part of the orchard is in colour
   - _key: ui.banner.complete
     _text: The whole orchard is restored
+  - _key: ui.quiz.title
+    _text: The Wisdom Tree asks
+  - _key: ui.golden_harvest.timer
+    _text: 'Golden Harvest {0}'

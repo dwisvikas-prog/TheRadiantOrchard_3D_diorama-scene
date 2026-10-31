@@ -9,9 +9,9 @@ using UnityEngine;
 namespace RadiantOrchard.App
 {
     /// <summary>
-    /// Turns gestures on the farm into plot actions. A tap on an open, empty plot opens the plant menu; taps and
-    /// harvest gestures on planted plots go to PlotManager, which judges them (HarvestRules). A swipe acts on every
-    /// plot its path crosses. Lives in the composition root because it joins Input to UI and Gameplay, which may not
+    /// Turns gestures on the farm into actions. A tap on the Wisdom Tree while a quiz waits opens the quiz; a tap on an
+    /// open, empty plot opens the plant menu; taps and harvest gestures on planted plots go to PlotManager, which judges
+    /// them (HarvestRules). A swipe acts on every plot its path crosses. Lives in the composition root because it joins Input to UI and Gameplay, which may not
     /// reference each other. Dispose to unsubscribe.
     /// </summary>
     public sealed class FarmPointerHandler : IDisposable
@@ -22,10 +22,12 @@ namespace RadiantOrchard.App
         private readonly FarmDefinition _farm;
         private readonly PlotManager _plots;
         private readonly PlantMenuView _plantMenu;
+        private readonly QuizManager _quiz;
+        private readonly QuizPanelView _quizPanel;
         private readonly float _swipeSampleSpacing;
 
         public FarmPointerHandler(GestureRecognizer gestures, Camera camera, FarmView farmView, FarmDefinition farm,
-            PlotManager plots, PlantMenuView plantMenu, float swipeSampleSpacingFraction)
+            PlotManager plots, PlantMenuView plantMenu, QuizManager quiz, QuizPanelView quizPanel, float swipeSampleSpacingFraction)
         {
             _gestures = gestures;
             _camera = camera;
@@ -33,6 +35,8 @@ namespace RadiantOrchard.App
             _farm = farm;
             _plots = plots;
             _plantMenu = plantMenu;
+            _quiz = quiz;
+            _quizPanel = quizPanel;
             _swipeSampleSpacing = swipeSampleSpacingFraction;
 
             _gestures.Tapped += OnTapped;
@@ -47,9 +51,16 @@ namespace RadiantOrchard.App
             _gestures.Swiped -= OnSwiped;
         }
 
+        private bool PanelOpen => _plantMenu.IsOpen || _quizPanel.IsOpen;
+
         private void OnTapped(Vector2 screen)
         {
-            if (_plantMenu.IsOpen) return;
+            if (PanelOpen) return;
+            if (_quiz.IsReady && _farmView.WisdomTreeView != null && _farmView.WisdomTreeView.Contains(ToWorld(screen)))
+            {
+                _quizPanel.Show();
+                return;
+            }
             int plot = PlotAt(screen);
             if (plot < 0) return;
 
@@ -60,7 +71,7 @@ namespace RadiantOrchard.App
 
         private void OnGestured(GestureType gesture, Vector2 screen)
         {
-            if (_plantMenu.IsOpen) return;
+            if (PanelOpen) return;
             int plot = PlotAt(screen);
             if (plot >= 0) _plots.HandleGesture(plot, gesture);
         }
@@ -68,7 +79,7 @@ namespace RadiantOrchard.App
         // Every plot the swipe passes over is judged once, so one swipe can pick a row of ripe swipe-fruit trees.
         private void OnSwiped(SwipePath path)
         {
-            if (_plantMenu.IsOpen || path.Count == 0) return;
+            if (PanelOpen || path.Count == 0) return;
             float spacing = _swipeSampleSpacing * Screen.height;
             int crossed = 0;
 
@@ -90,10 +101,15 @@ namespace RadiantOrchard.App
         private static int Bit(int plot) => plot >= 0 && plot < 32 ? 1 << plot : 0;
 
         // The tree in front wins (lowest on screen draws on top); otherwise the plot whose ground cells were hit.
+        private Vector2 ToWorld(Vector2 screen)
+        {
+            Vector3 world = _camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -_camera.transform.position.z));
+            return new Vector2(world.x, world.y);
+        }
+
         private int PlotAt(Vector2 screen)
         {
-            Vector3 world3 = _camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -_camera.transform.position.z));
-            var world = new Vector2(world3.x, world3.y);
+            Vector2 world = ToWorld(screen);
 
             int best = -1;
             float bestY = float.MaxValue;

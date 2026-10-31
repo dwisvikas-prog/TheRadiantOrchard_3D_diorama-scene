@@ -28,6 +28,8 @@ namespace RadiantOrchard.App
         [SerializeField] private VibrancyMeterView _meter;
         [SerializeField] private ZoneBannerView _banner;
         [SerializeField] private ZoneUnlockSequence _zoneUnlock;
+        [SerializeField] private QuizPanelView _quizPanel;
+        [SerializeField] private GoldenHarvestView _goldenHarvest;
 
         private AppServices _services;
         private PlotManager _plots;
@@ -41,6 +43,8 @@ namespace RadiantOrchard.App
         private HarvestDelivery _deliveryViews;
         private VibrancyManager _vibrancy;
         private ZonesPresenter _zones;
+        private QuizManager _quiz;
+        private WisdomTreePresenter _treePresenter;
 
         private void Awake()
         {
@@ -54,9 +58,9 @@ namespace RadiantOrchard.App
 
             if (_farmView == null || _cameraController == null || _gestures == null || _plantMenu == null || _tonics == null
                 || _visitorViews == null || _popups == null || _hud == null || _basket == null || _combo == null || _meter == null
-                || _banner == null || _zoneUnlock == null)
+                || _banner == null || _zoneUnlock == null || _quizPanel == null || _goldenHarvest == null)
             {
-                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo, Meter, Banner and Zone Unlock must be assigned (Radiant Orchard > Setup).", this);
+                Log.Error("GameInstaller: Farm View, Camera Controller, Gestures, Plant Menu, Tonics, Visitor Views, Popups, HUD, Basket, Combo, Meter, Banner, Zone Unlock, Quiz Panel and Golden Harvest must be assigned (Radiant Orchard > Setup).", this);
                 return;
             }
 
@@ -72,6 +76,7 @@ namespace RadiantOrchard.App
             services.Clock.Ticked += _plotsPresenter.Tick;
             _boosts = new BoostService(services.Events);
             services.Clock.Ticked += TickBoosts;
+            _quiz = new QuizManager(services.State, services.Config, services.Events, _boosts, services.Save.MarkDirty, new System.Random());
             _heal = new HealService(services.State, services.Config, services.Events, services.Save.MarkDirty, services.Time, _boosts);
             _visitors = new VisitorManager(services.State, services.Config, services.Time, services.Events, _heal, services.Save.MarkDirty, new System.Random());
             services.Clock.Ticked += TickVisitors;
@@ -86,6 +91,8 @@ namespace RadiantOrchard.App
             _combo.Init(services.Config, services.Events);
             _meter.Init(services.Config, services.State, services.Events);
             _zones = new ZonesPresenter(_farmView, services.State, services.Events);
+            _treePresenter = new WisdomTreePresenter(_farmView.WisdomTreeView, _quiz, services.Events);
+            _goldenHarvest.Init(services.Config, _boosts, services.Events);
             _deliveryViews = new HarvestDelivery(services.Events, _delivery, _visitorViews, _tonics, _popups, _farmView, _basket,
                 _cameraController.GetComponent<Camera>(), services.Config);
             // Visitors who came while the app was closed (or in the background) are waiting once the views are ready.
@@ -93,16 +100,17 @@ namespace RadiantOrchard.App
             services.Events.Subscribe<TimeAwayApplied>(OnTimeAway);
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy);
+            DevGame.Current = new DevGame(services.Config, services.State, services.Time, services.Events, services.Save, _plots, _heal, _visitors, _delivery, _boosts, _vibrancy, _quiz);
 #endif
 
             _gestures.Init(services.Config.Balance, _cameraController);
             _plantMenu.Init(_plots, services.Config, services.State, services.Events);
+            _quizPanel.Init(_quiz, services.Config);
             _banner.Init(services.Config.Strings);
             // After the zones presenter, so a zone is marked pending before its sequence looks at it.
-            _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu);
+            _zoneUnlock.Init(services.Config, services.Events, _cameraController, _gestures, _zones, _banner, _plantMenu, _quizPanel);
             _pointer = new FarmPointerHandler(_gestures, _cameraController.GetComponent<Camera>(), _farmView, services.Config.Farm,
-                _plots, _plantMenu, services.Config.Balance.SwipeSampleSpacing);
+                _plots, _plantMenu, _quiz, _quizPanel, services.Config.Balance.SwipeSampleSpacing);
 
             Log.Info($"GameInstaller: ready; {services.State.Seeds} seeds, {services.State.HealedTotal} healed, away {services.LaunchTimeAway}.");
         }
@@ -134,6 +142,8 @@ namespace RadiantOrchard.App
             _deliveryViews?.Dispose();
             _delivery?.Dispose();
             _zones?.Dispose();
+            _treePresenter?.Dispose();
+            _quiz?.Dispose();
             _vibrancy?.Dispose();
         }
     }

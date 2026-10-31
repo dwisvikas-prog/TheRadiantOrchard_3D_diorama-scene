@@ -19,8 +19,11 @@ namespace RadiantOrchard.Core
         [SerializeField] private VirtueDefinition[] _virtues = new VirtueDefinition[0];
         [Tooltip("Visitor kinds. Phase 1 has one; Phase 2 adds special visitors.")]
         [SerializeField] private VisitorDefinition[] _visitors = new VisitorDefinition[0];
+        [Tooltip("The Wisdom Tree's quiz questions (5.8).")]
+        [SerializeField] private QuizSet _quiz;
 
         public BalanceConfig Balance => _balance;
+        public QuizSet Quiz => _quiz;
         public StringTable Strings => _strings;
         public FarmDefinition Farm => _farm;
         public IReadOnlyList<FruitDefinition> Fruits => _fruits;
