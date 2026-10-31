@@ -6,15 +6,18 @@ using UnityEngine;
 namespace RadiantOrchard.Presentation
 {
     /// <summary>
-    /// One pooled visitor figure (CLAUDE.md 5.4): grey body and head, a thought bubble with the requested fruit and a
-    /// patience bar that runs green to red (hidden on the bench, where nobody waits against a clock). Healing turns
-    /// them to the fruit's colour and they walk off coloured. On arrival a short speech line (their virtue's situation)
+    /// One pooled visitor figure (CLAUDE.md 5.4): body and head painted in colour but shown grey by the desaturation
+    /// shader, a thought bubble with the requested fruit and a patience bar that runs green to red (hidden on the bench,
+    /// where nobody waits against a clock). Healing sweeps colour over them from the feet up (5.6) and they walk off
+    /// coloured. On arrival a short speech line (their virtue's situation)
     /// shows above them for a few seconds.
     /// Placeholder shapes until the stick-figure art (CHAR) exists. Moved by VisitorsPresenter; no Update of its own.
     /// </summary>
     public sealed class VisitorView : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer[] _body = new SpriteRenderer[0];
+        [Tooltip("Grey ↔ colour on the body and head (M_SpriteDesaturate).")]
+        [SerializeField] private Desaturation _colour;
         [SerializeField] private GameObject _bubble;
         [SerializeField] private SpriteRenderer _bubbleFruit;
         [SerializeField] private Transform _patienceFill;
@@ -27,11 +30,12 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Vector2 _linePadding = new Vector2(0.4f, 0.25f);
 
         [Header("Look (placeholder)")]
-        [SerializeField] private Color _grey = new Color(0.62f, 0.62f, 0.6f, 1f);
         [SerializeField] private Color _patienceFull = new Color(0.36f, 0.72f, 0.36f, 1f);
         [SerializeField] private Color _patienceHalf = new Color(0.95f, 0.8f, 0.25f, 1f);
         [SerializeField] private Color _patienceEmpty = new Color(0.85f, 0.3f, 0.25f, 1f);
-        [SerializeField] private float _sweepSeconds = 0.4f;
+        [Tooltip("The colour sweep on heal: how long it takes and how tall the figure is (world units, feet up).")]
+        [SerializeField] private float _sweepSeconds = 0.5f;
+        [SerializeField] private float _sweepHeight = 2.1f;
         [Tooltip("The celebrate hop when healed (placeholder until the stick-figure animation).")]
         [SerializeField] private float _hopHeight = 0.4f;
         [SerializeField] private float _hopSeconds = 0.35f;
@@ -44,19 +48,20 @@ namespace RadiantOrchard.Presentation
         private Vector2 _lineBackUnitSize = Vector2.one;
         // Where the backing sprite's pivot sits inside it (0..1); placeholder blocks pivot at the bottom.
         private Vector2 _lineBackPivot = new Vector2(0.5f, 0.5f);
-        private Coroutine _heal;
         private Coroutine _hop;
         private float _hopOffset;
 
         public Vector2 PopupPoint => _popupAnchor.position;
         public Vector2 TonicPoint => _tonicAnchor.position;
 
-        /// <summary>A fresh grey visitor asking for this fruit (fruit icon when the art exists, else its colour).</summary>
+        /// <summary>
+        /// A fresh grey visitor asking for this fruit (fruit icon when the art exists, else its colour). The placeholder
+        /// figure is painted in the fruit's colour and shown grey until healed.
+        /// </summary>
         public void Show(FruitDefinition fruit)
         {
-            if (_heal != null) StopCoroutine(_heal);
-            _heal = null;
-            SetBodyColour(_grey);
+            SetBodyColour(fruit != null ? fruit.Tint : Color.white);
+            _colour.SetSaturation(0f);
             _bubble.SetActive(true);
             _patienceFill.parent.gameObject.SetActive(true);
             if (fruit != null && fruit.Icon != null)
@@ -127,15 +132,15 @@ namespace RadiantOrchard.Presentation
                 : Color.Lerp(_patienceEmpty, _patienceHalf, patience * 2f);
         }
 
-        /// <summary>Grey to colour (the colour sweep shader replaces this tint in W3); stays coloured while leaving.</summary>
+        /// <summary>Colour sweeps over them from the feet up, with a hop; they stay coloured while leaving.</summary>
         public void PlayHeal(Color colour)
         {
             HideLine();
             _bubble.SetActive(false);
             _patienceFill.parent.gameObject.SetActive(false);
-            if (!isActiveAndEnabled) { SetBodyColour(colour); return; }
-            if (_heal != null) StopCoroutine(_heal);
-            _heal = StartCoroutine(Sweep(colour));
+            SetBodyColour(colour);
+            _colour.Sweep(transform, Vector2.up, _sweepHeight, _sweepSeconds);
+            if (!isActiveAndEnabled) return;
             if (_hop != null) StopCoroutine(_hop);
             _hop = StartCoroutine(Hop());
         }
@@ -161,17 +166,6 @@ namespace RadiantOrchard.Presentation
             }
         }
 
-        private IEnumerator Sweep(Color colour)
-        {
-            for (float t = 0f; t < _sweepSeconds; t += Time.deltaTime)
-            {
-                SetBodyColour(Color.Lerp(_grey, colour, t / _sweepSeconds));
-                yield return null;
-            }
-            SetBodyColour(colour);
-            _heal = null;
-        }
-
         private void SetBodyColour(Color colour)
         {
             for (int i = 0; i < _body.Length; i++) _body[i].color = colour;
@@ -179,14 +173,13 @@ namespace RadiantOrchard.Presentation
 
         private void OnDisable()
         {
-            _heal = null;
             _hop = null;
             _hopOffset = 0f;
         }
 
         private void Awake()
         {
-            if (_body.Length == 0 || _bubble == null || _bubbleFruit == null || _patienceFill == null || _patienceFillRenderer == null
+            if (_body.Length == 0 || _colour == null || _bubble == null || _bubbleFruit == null || _patienceFill == null || _patienceFillRenderer == null
                 || _popupAnchor == null || _tonicAnchor == null || _line == null || _lineBack == null)
             {
                 Log.Error($"VisitorView '{name}': a reference is missing; rebuild it (Radiant Orchard > Setup > Build Visitors).", this);

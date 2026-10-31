@@ -22,6 +22,8 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Transform _exitPoint;
         [Tooltip("One tilemap per zone, zone 1 first.")]
         [SerializeField] private Tilemap[] _zones = new Tilemap[0];
+        [Tooltip("Grey ↔ colour for each zone tilemap, zone 1 first (VibrancyManager colours them).")]
+        [SerializeField] private Desaturation[] _zoneColours = new Desaturation[0];
         [Tooltip("World area the camera may show: the farm plus its margin.")]
         [SerializeField] private Rect _worldBounds;
 
@@ -34,6 +36,7 @@ namespace RadiantOrchard.Presentation
         public IReadOnlyList<Transform> WaitingSpots => _waitingSpots;
         public Transform ExitPoint => _exitPoint;
         public IReadOnlyList<Tilemap> Zones => _zones;
+        public IReadOnlyList<Desaturation> ZoneColours => _zoneColours;
         public Rect WorldBounds => _worldBounds;
 
         private void Awake()

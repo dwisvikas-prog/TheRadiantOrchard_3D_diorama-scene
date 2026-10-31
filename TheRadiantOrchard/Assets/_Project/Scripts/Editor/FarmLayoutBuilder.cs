@@ -33,10 +33,13 @@ namespace RadiantOrchard.Editor
         private const int GroundOrder = -100;
         private const int PathOrder = -90;
 
-        private static readonly Color[] ZoneGreys =
+        // Painted colour of each zone's placeholder ground; the desaturation shader shows it grey until the zone is restored.
+        private static readonly Color[] ZoneColours =
         {
-            Hex("#9C9C92"), Hex("#8F8F86"), Hex("#A6A69B"), Hex("#94948A"), Hex("#878780"),
+            Hex("#8DBF5A"), Hex("#7DB35E"), Hex("#9CC566"), Hex("#86B86A"), Hex("#74A956"),
         };
+        // How much darker the grey (withered) ground is than the plain grey of its colour.
+        private const float ZoneDarken = 0.12f;
         private static readonly Color PathColour = Hex("#B8A88E");
         private static readonly Color LockedPlotTint = new Color(0.55f, 0.55f, 0.55f, 1f);
         private static readonly Color TimerBackground = Hex("#FFF6E3");
@@ -86,7 +89,9 @@ namespace RadiantOrchard.Editor
             grid.cellSize = CellSize;
             var view = rootGo.AddComponent<FarmView>();
 
-            Tilemap[] zones = BuildZones(rootGo.transform, farm, groundTile);
+            Material desaturate = DesaturateMaterial.Ensure();
+            if (desaturate == null) return;
+            Tilemap[] zones = BuildZones(rootGo.transform, farm, groundTile, desaturate, out Desaturation[] zoneColours);
             BuildPath(rootGo.transform, farm, groundTile);
             PlotView[] plots = BuildPlots(rootGo.transform, grid, farm, plotSprite, blockSprite, tileSprite, timerFont, config.Balance.PlotsOpenAt(0));
 
@@ -112,6 +117,7 @@ namespace RadiantOrchard.Editor
             SetArray(so.FindProperty("_waitingSpots"), spots);
             so.FindProperty("_exitPoint").objectReferenceValue = exit;
             SetArray(so.FindProperty("_zones"), zones);
+            SetArray(so.FindProperty("_zoneColours"), zoneColours);
             so.FindProperty("_worldBounds").rectValue = WorldBounds(grid, farm);
             so.ApplyModifiedPropertiesWithoutUndo();
 
@@ -132,23 +138,35 @@ namespace RadiantOrchard.Editor
             Debug.Log($"FarmLayoutBuilder: built {plots.Length} plots, {zones.Length} zones, {spots.Length} waiting spots; camera bounds {view.WorldBounds}.");
         }
 
-        private static Tilemap[] BuildZones(Transform parent, FarmDefinition farm, Tile tile)
+        // Each zone is its own tilemap on the desaturation material, starting grey (CLAUDE.md 5.1).
+        private static Tilemap[] BuildZones(Transform parent, FarmDefinition farm, Tile tile, Material desaturate, out Desaturation[] colours)
         {
             Transform ground = Child(parent, "Ground");
             var zones = new Tilemap[farm.ZoneCells.Count];
+            colours = new Desaturation[zones.Length];
             for (int z = 0; z < zones.Length; z++)
             {
                 Tilemap map = NewTilemap(ground, "Zone_" + (z + 1), GroundOrder);
+                var renderer = map.GetComponent<TilemapRenderer>();
+                renderer.sharedMaterial = desaturate;
                 RectInt rect = farm.ZoneCells[z];
-                Color grey = ZoneGreys[z % ZoneGreys.Length];
+                Color colour = ZoneColours[z % ZoneColours.Length];
                 foreach (Vector2Int cell in rect.allPositionsWithin)
                 {
                     var pos = new Vector3Int(cell.x, cell.y, 0);
                     map.SetTile(pos, tile);
                     // Checkerboard so the grid stays visible on placeholder ground.
-                    map.SetColor(pos, ((cell.x + cell.y) & 1) == 0 ? grey : new Color(grey.r * 0.94f, grey.g * 0.94f, grey.b * 0.94f, 1f));
+                    map.SetColor(pos, ((cell.x + cell.y) & 1) == 0 ? colour : new Color(colour.r * 0.94f, colour.g * 0.94f, colour.b * 0.94f, 1f));
                 }
                 zones[z] = map;
+
+                var zoneColour = map.gameObject.AddComponent<Desaturation>();
+                var so = new SerializedObject(zoneColour);
+                SetArray(so.FindProperty("_renderers"), new Object[] { renderer });
+                so.FindProperty("_saturation").floatValue = 0f;
+                so.FindProperty("_darken").floatValue = ZoneDarken;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                colours[z] = zoneColour;
             }
             return zones;
         }

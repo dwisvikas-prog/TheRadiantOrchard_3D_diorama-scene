@@ -60,7 +60,8 @@ namespace RadiantOrchard.Editor
             var dot = AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderFolder + "/ph_soft_dot.png");
             var diamond = AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderFolder + "/ph_tile.png");
             var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
-            if (block == null || dot == null || diamond == null || font == null)
+            Material desaturate = DesaturateMaterial.Ensure();
+            if (block == null || dot == null || diamond == null || font == null || desaturate == null)
             {
                 Debug.LogError("VisitorsBuilder: placeholder sprites or the Fredoka-Bold SDF font are missing; run Build Placeholder Farm and Build Tonic first.");
                 return;
@@ -82,7 +83,7 @@ namespace RadiantOrchard.Editor
                 return;
             }
 
-            GameObject visitorSource = BuildVisitor(block, dot, diamond, font);
+            GameObject visitorSource = BuildVisitor(block, dot, diamond, font, desaturate);
             var visitorPrefab = PrefabUtility.SaveAsPrefabAsset(visitorSource, VisitorPrefabPath).GetComponent<VisitorView>();
             Object.DestroyImmediate(visitorSource);
             GameObject popupSource = BuildPopup(font);
@@ -129,7 +130,7 @@ namespace RadiantOrchard.Editor
             AssetDatabase.SaveAssets();
         }
 
-        private static GameObject BuildVisitor(Sprite block, Sprite dot, Sprite diamond, TMP_FontAsset font)
+        private static GameObject BuildVisitor(Sprite block, Sprite dot, Sprite diamond, TMP_FontAsset font, Material desaturate)
         {
             var root = new GameObject("Visitor");
             // Body, head, bubble and bar sort as one object, by the visitor's feet.
@@ -137,6 +138,17 @@ namespace RadiantOrchard.Editor
 
             SpriteRenderer body = Renderer(root.transform, "Body", block, 0, Vector3.zero, SizeOf(block, 0.55f, 1.3f));
             SpriteRenderer head = Renderer(root.transform, "Head", dot, 1, new Vector3(0f, 1.6f, 0f), SizeOf(dot, 0.7f, 0.7f));
+            // Body and head are painted in colour and shown grey by the shader until healed (CLAUDE.md 5.6).
+            body.sharedMaterial = desaturate;
+            head.sharedMaterial = desaturate;
+            var colour = root.AddComponent<Desaturation>();
+            var colourSo = new SerializedObject(colour);
+            SerializedProperty renderers = colourSo.FindProperty("_renderers");
+            renderers.arraySize = 2;
+            renderers.GetArrayElementAtIndex(0).objectReferenceValue = body;
+            renderers.GetArrayElementAtIndex(1).objectReferenceValue = head;
+            colourSo.FindProperty("_saturation").floatValue = 0f;
+            colourSo.ApplyModifiedPropertiesWithoutUndo();
 
             var bubble = Child(root.transform, "Bubble", new Vector3(0.95f, 2.55f, 0f));
             Renderer(bubble, "Back", dot, 2, Vector3.zero, SizeOf(dot, 1.2f, 1.0f)).color = Color.white;
@@ -176,6 +188,7 @@ namespace RadiantOrchard.Editor
             parts.arraySize = 2;
             parts.GetArrayElementAtIndex(0).objectReferenceValue = body;
             parts.GetArrayElementAtIndex(1).objectReferenceValue = head;
+            so.FindProperty("_colour").objectReferenceValue = colour;
             so.FindProperty("_bubble").objectReferenceValue = bubble.gameObject;
             so.FindProperty("_bubbleFruit").objectReferenceValue = fruit;
             so.FindProperty("_patienceFill").objectReferenceValue = fill.transform;

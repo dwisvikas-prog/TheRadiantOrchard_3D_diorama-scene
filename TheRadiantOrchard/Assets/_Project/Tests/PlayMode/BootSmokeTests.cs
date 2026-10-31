@@ -44,5 +44,20 @@ namespace RadiantOrchard.Tests.PlayMode
 
             Assert.IsTrue(File.Exists(Path.Combine(_saveDir, "save.json")), "The autosave should have written save.json.");
         }
+
+        [UnityTest]
+        public IEnumerator EveryZoneStartsGreyOnTheDesaturationMaterial()
+        {
+            yield return TestGame.Boot(_saveDir);
+            // Test code may search the scene; the no-Find rule is for runtime code.
+            var farm = Object.FindFirstObjectByType<RadiantOrchard.Presentation.FarmView>();
+            Assert.AreEqual(5, farm.ZoneColours.Count, "CLAUDE.md 5.1: 5 zones.");
+            for (int z = 0; z < farm.ZoneColours.Count; z++)
+            {
+                Assert.AreEqual(0f, farm.ZoneColours[z].Saturation, $"Zone {z + 1} is grey at the start.");
+                Renderer renderer = farm.Zones[z].GetComponent<Renderer>();
+                Assert.AreEqual("Radiant Orchard/Sprite Desaturate", renderer.sharedMaterial.shader.name, $"Zone {z + 1}");
+            }
+        }
     }
 }
