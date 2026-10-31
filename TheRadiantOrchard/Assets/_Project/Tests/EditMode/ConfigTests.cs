@@ -136,7 +136,7 @@ namespace RadiantOrchard.Tests.EditMode
         public void CameraZoomLimitsAreOrdered()
         {
             var b = LoadBalance();
-            Assert.AreEqual(10.8f, b.CameraDefaultOrthoSize, 1e-4f);
+            Assert.AreEqual(13.5f, b.CameraDefaultOrthoSize, 1e-4f, "Layout v2: the whole farm at the default zoom.");
             Assert.LessOrEqual(b.CameraMinOrthoSize, b.CameraDefaultOrthoSize);
             Assert.LessOrEqual(b.CameraDefaultOrthoSize, b.CameraMaxOrthoSize);
             Assert.That(b.CameraDragThreshold, Is.GreaterThan(0f).And.LessThan(0.1f));

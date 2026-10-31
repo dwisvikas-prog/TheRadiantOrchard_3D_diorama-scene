@@ -8,10 +8,11 @@ namespace RadiantOrchard.Presentation
 {
     /// <summary>
     /// Shows VisitorManager's visitors: takes a pooled VisitorView when one arrives (ENGINEERING_GUIDE 7), walks it
-    /// in step with the manager's phases (spawn → waiting spot → exit, or on to a bench seat or back into the jungle),
-    /// keeps its patience bar current, and returns it to the pool when they leave. Each walk starts from wherever the
-    /// figure is, so a change of plan never makes it jump. Movement is interpolated every frame from the manager's
-    /// phase times, so walking is smooth although the manager ticks four times a second. Allocation-free per frame.
+    /// in step with the manager's phases along the farm paths (jungle → entry route → waiting spot → exit route, or on to
+    /// a bench seat, or back along the entry route into the jungle), keeps its patience bar current, and returns it to
+    /// the pool when they leave. Each walk starts from wherever the figure is, so a change of plan never makes it jump.
+    /// Movement is interpolated every frame from the manager's phase times (RouteMath), so walking is smooth although
+    /// the manager ticks four times a second. Allocation-free per frame.
     /// </summary>
     public sealed class VisitorsPresenter : MonoBehaviour
     {
@@ -22,8 +23,9 @@ namespace RadiantOrchard.Presentation
             public VisitorView View;
             public VisitorPhase Phase;
             public float Elapsed;
-            // Where the current walk started.
-            public Vector2 From;
+            // The current walk: from where the figure was, along the paths, to its goal (a buffer per figure).
+            public Vector2[] Route;
+            public int RouteCount;
             // Seconds the speech line has been up; negative when none is showing.
             public float LineAge;
         }
@@ -37,6 +39,9 @@ namespace RadiantOrchard.Presentation
         [Tooltip("Seconds the arrival line stays up (from leaving the jungle), the last part fading.")]
         [Min(0.5f)] [SerializeField] private float _lineSeconds = 8f;
         [Min(0.05f)] [SerializeField] private float _lineFadeSeconds = 0.5f;
+
+        // Longest walk: start + every route point + goal.
+        private const int RouteCapacity = 16;
 
         private readonly List<Shown> _shown = new List<Shown>(8);
         private ObjectPool<VisitorView> _pool;
@@ -91,13 +96,14 @@ namespace RadiantOrchard.Presentation
             // Visitors who came while the app was closed are already standing at their spot.
             Vector2 at = info.Phase == VisitorPhase.WalkingIn ? (Vector2)_farm.SpawnPoint.position : (Vector2)_farm.WaitingSpots[e.Spot].position;
             view.MoveTo(at);
-            float lineAge = -1f;
+            var shown = new Shown { Id = e.VisitorId, Spot = e.Spot, View = view, Phase = info.Phase, Route = new Vector2[RouteCapacity], LineAge = -1f };
+            PlanWalk(ref shown, info, at);
             if (!string.IsNullOrEmpty(info.LineKey))
             {
                 view.ShowLine(_config.Strings.Get(info.LineKey));
-                lineAge = 0f;
+                shown.LineAge = 0f;
             }
-            _shown.Add(new Shown { Id = e.VisitorId, Spot = e.Spot, View = view, Phase = info.Phase, From = at, LineAge = lineAge });
+            _shown.Add(shown);
         }
 
         private void ShowExisting(VisitorInfo info)
@@ -108,7 +114,9 @@ namespace RadiantOrchard.Presentation
             Vector2 at = info.Seat >= 0 ? SeatPosition(info.Seat) : (Vector2)_farm.SpawnPoint.position;
             view.MoveTo(at);
             view.gameObject.SetActive(info.Phase != VisitorPhase.Offscreen);
-            _shown.Add(new Shown { Id = info.Id, Spot = info.Spot, View = view, Phase = info.Phase, Elapsed = info.PhaseElapsed, From = at, LineAge = -1f });
+            var shown = new Shown { Id = info.Id, Spot = info.Spot, View = view, Phase = info.Phase, Elapsed = info.PhaseElapsed, Route = new Vector2[RouteCapacity], LineAge = -1f };
+            PlanWalk(ref shown, info, at);
+            _shown.Add(shown);
         }
 
         private void OnLeft(VisitorLeft e)
@@ -137,7 +145,7 @@ namespace RadiantOrchard.Presentation
                 {
                     s.Phase = info.Phase;
                     s.Elapsed = info.PhaseElapsed;
-                    s.From = s.View.transform.position;
+                    PlanWalk(ref s, info, s.View.transform.position);
                     if (info.PatienceRanOut) s.View.ShowPatienceBar(false);
                     // The line belongs to arriving; it goes once they move on (healed, or off to the bench).
                     if (s.Phase != VisitorPhase.WalkingIn && s.Phase != VisitorPhase.Waiting && s.LineAge >= 0f)
@@ -164,27 +172,54 @@ namespace RadiantOrchard.Presentation
                 switch (s.Phase)
                 {
                     case VisitorPhase.WalkingIn:
-                        s.View.MoveTo(Vector2.Lerp(s.From, _farm.WaitingSpots[s.Spot].position, s.Elapsed / balance.VisitorWalkInSeconds));
+                    case VisitorPhase.WalkingAway:
+                        s.View.MoveTo(RouteMath.PointAt(s.Route, s.RouteCount, s.Elapsed / balance.VisitorWalkInSeconds));
                         break;
                     case VisitorPhase.Waiting:
                         s.View.MoveTo(_farm.WaitingSpots[s.Spot].position);
                         s.View.SetPatience(info.Reserved ? info.Patience : 1f - s.Elapsed / balance.PatienceSeconds);
                         break;
                     case VisitorPhase.WalkingToBench:
-                        s.View.MoveTo(Vector2.Lerp(s.From, SeatPosition(info.Seat), s.Elapsed / balance.VisitorWalkToBenchSeconds));
+                        s.View.MoveTo(RouteMath.PointAt(s.Route, s.RouteCount, s.Elapsed / balance.VisitorWalkToBenchSeconds));
                         break;
                     case VisitorPhase.Sitting:
                         s.View.MoveTo(SeatPosition(info.Seat));
                         break;
-                    case VisitorPhase.WalkingAway:
-                        s.View.MoveTo(Vector2.Lerp(s.From, _farm.SpawnPoint.position, s.Elapsed / balance.VisitorWalkInSeconds));
-                        break;
                     case VisitorPhase.Leaving:
-                        s.View.MoveTo(Vector2.Lerp(s.From, _farm.ExitPoint.position, s.Elapsed / balance.VisitorWalkOutSeconds));
+                        s.View.MoveTo(RouteMath.PointAt(s.Route, s.RouteCount, s.Elapsed / balance.VisitorWalkOutSeconds));
                         break;
                 }
                 _shown[i] = s;
             }
+        }
+
+        // Lays out the walk for the visitor's phase from where the figure is: along the entry route to their spot, back
+        // along it into the jungle, along the exit route out, or straight to a bench seat (all inside the centre square).
+        private void PlanWalk(ref Shown s, VisitorInfo info, Vector2 from)
+        {
+            s.RouteCount = 0;
+            Add(ref s, from);
+            switch (info.Phase)
+            {
+                case VisitorPhase.WalkingIn:
+                    for (int i = 1; i < _farm.EntryRoute.Count; i++) Add(ref s, _farm.EntryRoute[i]);
+                    Add(ref s, _farm.WaitingSpots[s.Spot].position);
+                    break;
+                case VisitorPhase.WalkingAway:
+                    for (int i = _farm.EntryRoute.Count - 1; i >= 0; i--) Add(ref s, _farm.EntryRoute[i]);
+                    break;
+                case VisitorPhase.Leaving:
+                    for (int i = 0; i < _farm.ExitRoute.Count; i++) Add(ref s, _farm.ExitRoute[i]);
+                    break;
+                case VisitorPhase.WalkingToBench:
+                    Add(ref s, SeatPosition(info.Seat));
+                    break;
+            }
+        }
+
+        private static void Add(ref Shown s, Vector2 point)
+        {
+            if (s.RouteCount < s.Route.Length) s.Route[s.RouteCount++] = point;
         }
 
         private int IndexOf(int visitorId)

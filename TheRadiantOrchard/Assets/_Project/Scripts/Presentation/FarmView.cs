@@ -21,6 +21,10 @@ namespace RadiantOrchard.Presentation
         [SerializeField] private Transform _spawnPoint;
         [SerializeField] private Transform[] _waitingSpots = new Transform[0];
         [SerializeField] private Transform _exitPoint;
+        [Tooltip("Walk-in route in world space: spawn in the jungle to the edge of the centre square (from FarmDefinition).")]
+        [SerializeField] private Vector2[] _entryRoute = new Vector2[0];
+        [Tooltip("Walk-out route in world space: edge of the centre square to the exit in the jungle.")]
+        [SerializeField] private Vector2[] _exitRoute = new Vector2[0];
         [Tooltip("One tilemap per zone, zone 1 first.")]
         [SerializeField] private Tilemap[] _zones = new Tilemap[0];
         [Tooltip("Grey ↔ colour for each zone tilemap, zone 1 first (VibrancyManager colours them).")]
@@ -39,6 +43,8 @@ namespace RadiantOrchard.Presentation
         public Transform SpawnPoint => _spawnPoint;
         public IReadOnlyList<Transform> WaitingSpots => _waitingSpots;
         public Transform ExitPoint => _exitPoint;
+        public IReadOnlyList<Vector2> EntryRoute => _entryRoute;
+        public IReadOnlyList<Vector2> ExitRoute => _exitRoute;
         public IReadOnlyList<Tilemap> Zones => _zones;
         public IReadOnlyList<Desaturation> ZoneColours => _zoneColours;
         public float ZoneSweepSeconds => _zoneSweepSeconds;

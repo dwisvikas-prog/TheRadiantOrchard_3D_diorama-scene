@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using RadiantOrchard.App;
 using RadiantOrchard.Core;
@@ -105,11 +106,11 @@ namespace RadiantOrchard.Editor
             Transform bench = Landmark(landmarks, grid, farm.BenchCell, "Bench", blockSprite, new Vector2(2.6f, 0.6f), Hex("#8A5A35"), "Bench (3 seats)");
 
             Transform path = Child(rootGo.transform, "VisitorPath");
-            Transform spawn = Marker(path, grid, farm.SpawnCell, "Spawn", tileSprite, Hex("#C25B5B"), "Spawn");
+            Transform spawn = Marker(path, CellPoint(grid, farm.SpawnPoint), "Spawn", tileSprite, Hex("#C25B5B"), "Spawn");
             var spots = new Transform[farm.WaitingSpotCells.Count];
             for (int i = 0; i < spots.Length; i++)
-                spots[i] = Marker(path, grid, farm.WaitingSpotCells[i], "WaitingSpot_" + (i + 1), tileSprite, Hex("#E0C36A"), "Spot " + (i + 1));
-            Transform exit = Marker(path, grid, farm.ExitCell, "Exit", tileSprite, Hex("#5B8FC2"), "Exit");
+                spots[i] = Marker(path, CellCentre(grid, farm.WaitingSpotCells[i]), "WaitingSpot_" + (i + 1), tileSprite, Hex("#E0C36A"), "Spot " + (i + 1));
+            Transform exit = Marker(path, CellPoint(grid, farm.ExitPoint), "Exit", tileSprite, Hex("#5B8FC2"), "Exit");
 
             var so = new SerializedObject(view);
             so.FindProperty("_grid").objectReferenceValue = grid;
@@ -121,6 +122,8 @@ namespace RadiantOrchard.Editor
             so.FindProperty("_spawnPoint").objectReferenceValue = spawn;
             SetArray(so.FindProperty("_waitingSpots"), spots);
             so.FindProperty("_exitPoint").objectReferenceValue = exit;
+            SetPoints(so.FindProperty("_entryRoute"), grid, farm.EntryRoute);
+            SetPoints(so.FindProperty("_exitRoute"), grid, farm.ExitRoute);
             SetArray(so.FindProperty("_zones"), zones);
             SetArray(so.FindProperty("_zoneColours"), zoneColours);
             so.FindProperty("_worldBounds").rectValue = WorldBounds(grid, farm);
@@ -147,16 +150,15 @@ namespace RadiantOrchard.Editor
         private static Tilemap[] BuildZones(Transform parent, FarmDefinition farm, Tile tile, Material desaturate, out Desaturation[] colours)
         {
             Transform ground = Child(parent, "Ground");
-            var zones = new Tilemap[farm.ZoneCells.Count];
+            var zones = new Tilemap[farm.Zones.Count];
             colours = new Desaturation[zones.Length];
             for (int z = 0; z < zones.Length; z++)
             {
                 Tilemap map = NewTilemap(ground, "Zone_" + (z + 1), GroundOrder);
                 var renderer = map.GetComponent<TilemapRenderer>();
                 renderer.sharedMaterial = desaturate;
-                RectInt rect = farm.ZoneCells[z];
                 Color colour = ZoneColours[z % ZoneColours.Length];
-                foreach (Vector2Int cell in rect.allPositionsWithin)
+                foreach (Vector2Int cell in farm.Zones[z].Cells())
                 {
                     var pos = new Vector3Int(cell.x, cell.y, 0);
                     map.SetTile(pos, tile);
@@ -176,18 +178,31 @@ namespace RadiantOrchard.Editor
             return zones;
         }
 
+        // The path bands (layout v2: a crossroads around the centre square), reaching into the jungle where visitors come and go.
         private static void BuildPath(Transform parent, FarmDefinition farm, Tile tile)
         {
             Tilemap map = NewTilemap(parent, "PathTiles", PathOrder);
-            Vector2Int from = farm.SpawnCell, to = farm.ExitCell;
-            int steps = Mathf.Max(Mathf.Abs(to.x - from.x), Mathf.Abs(to.y - from.y));
-            for (int i = 0; i <= steps; i++)
+            foreach (RectInt band in farm.PathCells)
             {
-                Vector2 p = Vector2.Lerp(from, to, steps == 0 ? 0f : (float)i / steps);
-                var pos = new Vector3Int(Mathf.RoundToInt(p.x), Mathf.RoundToInt(p.y), 0);
-                map.SetTile(pos, tile);
-                map.SetColor(pos, PathColour);
+                foreach (Vector2Int cell in band.allPositionsWithin)
+                {
+                    var pos = new Vector3Int(cell.x, cell.y, 0);
+                    map.SetTile(pos, tile);
+                    map.SetColor(pos, PathColour);
+                }
             }
+        }
+
+        // A point given in cell coordinates (may be fractional, e.g. the line between two path cells) in world space.
+        private static Vector3 CellPoint(Grid grid, Vector2 cell) =>
+            grid.transform.TransformPoint(grid.CellToLocalInterpolated(new Vector3(cell.x, cell.y, 0f)));
+
+        private static Vector3 CellCentre(Grid grid, Vector2Int cell) => grid.GetCellCenterWorld(new Vector3Int(cell.x, cell.y, 0));
+
+        private static void SetPoints(SerializedProperty array, Grid grid, IReadOnlyList<Vector2> cells)
+        {
+            array.arraySize = cells.Count;
+            for (int i = 0; i < cells.Count; i++) array.GetArrayElementAtIndex(i).vector2Value = CellPoint(grid, cells[i]);
         }
 
         private static PlotView[] BuildPlots(Transform parent, Grid grid, FarmDefinition farm, Sprite plotSprite, Sprite block, Sprite tile, TMP_FontAsset timerFont, int openAtStart)
@@ -319,11 +334,11 @@ namespace RadiantOrchard.Editor
             return go.transform;
         }
 
-        private static Transform Marker(Transform parent, Grid grid, Vector2Int cell, string name, Sprite tile, Color colour, string label)
+        private static Transform Marker(Transform parent, Vector3 position, string name, Sprite tile, Color colour, string label)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            go.transform.position = grid.GetCellCenterWorld(new Vector3Int(cell.x, cell.y, 0));
+            go.transform.position = position;
 
             // Marker visuals are editor-only helpers; the point itself (this transform) is what systems use.
             var visual = new GameObject("MarkerVisual") { tag = "EditorOnly" };

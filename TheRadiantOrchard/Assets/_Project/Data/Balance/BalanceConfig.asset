@@ -48,7 +48,7 @@ MonoBehaviour:
   _swipeMinDistance: 0.08
   _swipeMaxSeconds: 0.4
   _swipeSampleSpacing: 0.02
-  _cameraDefaultOrthoSize: 10.8
+  _cameraDefaultOrthoSize: 13.5
   _cameraMinOrthoSize: 5.4
   _cameraMaxOrthoSize: 13.5
   _cameraScrollZoomFactor: 0.1

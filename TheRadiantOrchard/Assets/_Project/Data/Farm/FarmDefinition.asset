@@ -13,49 +13,96 @@ MonoBehaviour:
   m_Name: FarmDefinition
   m_EditorClassIdentifier: RadiantOrchard.Core::RadiantOrchard.Core.FarmDefinition
   _farmCells:
-    x: -12
-    y: -12
-    width: 24
-    height: 24
-  _cameraMarginWorld: 2
+    x: -9
+    y: -9
+    width: 18
+    height: 18
+  _cameraMarginWorld: 4
   _plotSizeCells: {x: 3, y: 3}
   _plotCells:
-  - {x: -5, y: -1}
-  - {x: -1, y: -1}
-  - {x: 3, y: -1}
-  - {x: -5, y: 3}
-  - {x: -1, y: 3}
-  - {x: 3, y: 3}
-  - {x: -5, y: -5}
-  - {x: -1, y: -5}
-  - {x: 3, y: -5}
-  _wisdomTreeCell: {x: -1, y: 8}
-  _wellCell: {x: 8, y: 1}
-  _benchCell: {x: 6, y: -11}
-  _spawnCell: {x: -14, y: -9}
+  - {x: -8, y: 5}
+  - {x: -4, y: 5}
+  - {x: -8, y: 1}
+  - {x: 1, y: -8}
+  - {x: 5, y: -8}
+  - {x: -8, y: -8}
+  - {x: -4, y: -8}
+  - {x: 5, y: -4}
+  - {x: -8, y: -4}
+  _wisdomTreeCell: {x: 4, y: 4}
+  _wellCell: {x: -4, y: 2}
+  _benchCell: {x: 1, y: 1}
+  _pathCells:
+  - x: -13
+    y: -1
+    width: 10
+    height: 2
+  - x: -1
+    y: -13
+    width: 2
+    height: 10
+  - x: 3
+    y: -1
+    width: 6
+    height: 2
+  - x: -1
+    y: 3
+    width: 2
+    height: 6
+  _entryRoute:
+  - {x: -13, y: 0}
+  - {x: -3, y: 0}
+  _exitRoute:
+  - {x: 0, y: -3}
+  - {x: 0, y: -13}
   _waitingSpotCells:
-  - {x: -3, y: -9}
-  - {x: 0, y: -9}
-  - {x: 3, y: -9}
-  _exitCell: {x: 13, y: -9}
-  _zoneCells:
-  - x: -6
-    y: -6
-    width: 12
-    height: 12
-  - x: -12
-    y: -12
-    width: 6
-    height: 24
-  - x: 6
-    y: -12
-    width: 6
-    height: 24
-  - x: -6
-    y: 6
-    width: 12
-    height: 6
-  - x: -6
-    y: -12
-    width: 12
-    height: 6
+  - {x: -2, y: 0}
+  - {x: -1, y: -1}
+  - {x: 0, y: -2}
+  _zones:
+  - _name: Left plot area
+    _rects:
+    - x: -9
+      y: 3
+      width: 9
+      height: 6
+    - x: -9
+      y: 0
+      width: 6
+      height: 3
+  - _name: Right plot area
+    _rects:
+    - x: 0
+      y: -9
+      width: 9
+      height: 6
+    - x: 3
+      y: -3
+      width: 6
+      height: 3
+  - _name: Bottom plot area
+    _rects:
+    - x: -9
+      y: -9
+      width: 9
+      height: 6
+    - x: -9
+      y: -3
+      width: 6
+      height: 3
+  - _name: Centre waiting square
+    _rects:
+    - x: -3
+      y: -3
+      width: 6
+      height: 6
+  - _name: Wisdom Tree area
+    _rects:
+    - x: 0
+      y: 3
+      width: 9
+      height: 6
+    - x: 3
+      y: 0
+      width: 6
+      height: 3

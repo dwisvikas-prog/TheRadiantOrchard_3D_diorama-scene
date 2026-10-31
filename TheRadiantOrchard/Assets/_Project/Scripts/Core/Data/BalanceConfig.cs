@@ -93,8 +93,8 @@ namespace RadiantOrchard.Core
         [Range(0.005f, 0.1f)] [SerializeField] private float _swipeSampleSpacing = 0.02f;
 
         [Header("Camera (5.1)")]
-        [Tooltip("Orthographic size at the default zoom. Art is drawn at 2x, so 10.8 shows it at half size on a 1080p screen.")]
-        [Min(1f)] [SerializeField] private float _cameraDefaultOrthoSize = 10.8f;
+        [Tooltip("Orthographic size at the default zoom: the whole farm on screen (layout v2). Narrower screens are clamped to the farm bounds. Art drawn at 2x shows at 0.4x on a 1080p screen.")]
+        [Min(1f)] [SerializeField] private float _cameraDefaultOrthoSize = 13.5f;
         [Tooltip("Closest zoom. 5.4 shows the 2x art at full resolution on a 1080p screen.")]
         [Min(1f)] [SerializeField] private float _cameraMinOrthoSize = 5.4f;
         [Tooltip("Farthest zoom (also limited by the farm bounds).")]
